@@ -171,6 +171,7 @@
       <div class="row"><span class="lbl">Vatten</span><input type="number" data-key="ut_vatten" value="795" step="50"></div>
       <div class="row"><span class="lbl">El (Tibber)</span><input type="number" data-key="ut_tibber" value="1694" step="100"></div>
       <div class="row"><span class="lbl">Alingsås energi</span><input type="number" data-key="ut_energi" value="2518" step="100"></div>
+      <div class="row"><span class="lbl">Avfall</span><input type="number" data-key="ut_avfall" value="750" step="50"></div>
       <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-boende" style="color:var(--blue)">—</span></div>
     </div>
 
@@ -410,7 +411,7 @@ function recalculate() {
   const inTot = v('in_felipe') + v('in_ulrika') + v('in_vard') + v('in_barn') + v('in_lagenhet');
 
   // Utgiftskategorier
-  const boende    = v('ut_lan1')  + v('ut_lan_lag') + v('ut_vatten') + v('ut_tibber') + v('ut_energi');
+  const boende    = v('ut_lan1')  + v('ut_lan_lag') + v('ut_vatten') + v('ut_tibber') + v('ut_energi') + v('ut_avfall');
   const transport = v('ut_kia')   + v('ut_eup');
   const telefoni  = v('ut_telia') + v('ut_telenor') + v('ut_tre') + v('ut_bredband5g') + v('ut_telia_cloud');
   const forsakr   = v('ut_hem')   + v('ut_trygg')  + v('ut_skandia')+ v('ut_if') + v('ut_svl');
