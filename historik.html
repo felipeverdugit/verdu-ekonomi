@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historik — Ekonomisk Översikt</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --card:#1a1d27; --card2:#21263a;
+    --text:#e2e8f0; --muted:#8892a4; --border:#2d3348;
+    --radius:14px;
+    --blue:#4f8ef7; --green:#6ee7b7; --cyan:#22d3ee;
+    --orange:#f59e0b; --purple:#a78bfa; --red:#f87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:24px; }
+  h1 { font-size:2rem; font-weight:700; color:var(--blue); margin-bottom:4px; }
+  h2 { font-size:1rem; font-weight:700; color:var(--green); margin-bottom:16px; text-transform:uppercase; letter-spacing:.07em; }
+  .subtitle { color:var(--muted); margin-bottom:28px; font-size:.9rem; }
+  section { margin-bottom:40px; }
+  hr { border:none; border-top:1px solid var(--border); margin:36px 0; }
+
+  /* Knappar */
+  .btn { border:none; border-radius:10px; padding:12px 28px; font-weight:700; font-size:.95rem; cursor:pointer; }
+  .btn-green { background:var(--green); color:#0f1117; }
+  .btn-green:hover { opacity:.85; }
+  .btn-red { background:transparent; border:1px solid var(--red); color:var(--red); padding:4px 10px; border-radius:6px; font-size:.75rem; cursor:pointer; }
+  .btn-red:hover { background:var(--red); color:#fff; }
+  .btn-back { display:inline-block; color:var(--muted); font-size:.85rem; text-decoration:none; margin-bottom:20px; }
+  .btn-back:hover { color:var(--text); }
+
+  /* Tabell */
+  .tbl-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  thead th { background:var(--card2); color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-size:.7rem; padding:10px 12px; text-align:right; border-bottom:2px solid var(--border); white-space:nowrap; }
+  thead th:first-child { text-align:left; }
+  tbody tr { border-bottom:1px solid var(--border); }
+  tbody tr:hover { background:var(--card2); }
+  tbody td { padding:9px 12px; text-align:right; white-space:nowrap; }
+  tbody td:first-child { text-align:left; color:var(--muted); }
+  .col-fonder  { color:var(--blue); }
+  .col-tjp     { color:var(--green); }
+  .col-norge   { color:var(--red); }
+  .col-allman  { color:var(--cyan); }
+  .col-aktier  { color:var(--orange); }
+  .col-totalt  { color:var(--purple); font-weight:800; }
+
+  /* Tom state */
+  .empty { color:var(--muted); font-style:italic; padding:32px 0; text-align:center; }
+
+  /* Chart */
+  .chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
+
+  footer { color:var(--muted); font-size:.8rem; margin-top:40px; }
+</style>
+</head>
+<body>
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f1117;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border-radius:16px;padding:40px;width:320px;text-align:center;border:1px solid #2d3348;">
+    <div style="font-size:1.5rem;font-weight:700;color:#4f8ef7;margin-bottom:8px;">Verdu Ekonomi</div>
+    <div style="color:#8892a4;font-size:.9rem;margin-bottom:24px;">Ange lösenord för att fortsätta</div>
+    <input id="auth-pw" type="password" placeholder="Lösenord" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2d3348;background:#0f1117;color:#e2e8f0;font-size:1rem;margin-bottom:12px;outline:none;">
+    <button onclick="checkAuth()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#4f8ef7;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">Logga in</button>
+    <div id="auth-err" style="color:#f87171;margin-top:12px;font-size:.85rem;min-height:20px;"></div>
+  </div>
+</div>
+<script>
+  (function() {
+    if (sessionStorage.getItem('auth') === '1') document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkAuth(); });
+  })();
+  function checkAuth() {
+    if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+    } else {
+      document.getElementById('auth-err').textContent = 'Fel lösenord';
+      document.getElementById('auth-pw').value = '';
+    }
+  }
+</script>
+
+<a class="btn-back" href="ekonomi.html">← Tillbaka till Ekonomisk Översikt</a>
+
+<h1>Historik</h1>
+<p class="subtitle">Spara en snapshot när du uppdaterat värdena i ekonomi.html — en rad per tillfälle.</p>
+
+<section>
+  <button class="btn btn-green" onclick="saveSnapshot()">+ Spara snapshot idag</button>
+  <span id="save-msg" style="color:var(--green);margin-left:16px;font-size:.85rem;"></span>
+</section>
+
+<hr>
+
+<!-- DIAGRAM -->
+<section>
+  <h2>Utveckling över tid</h2>
+  <div class="chart-card">
+    <canvas id="lineChart" height="100"></canvas>
+  </div>
+</section>
+
+<hr>
+
+<!-- TABELL -->
+<section>
+  <h2>Logg</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th class="col-fonder">Privata fonder</th>
+          <th class="col-tjp">TjP & LöneVXL</th>
+          <th class="col-norge">TjP Norge</th>
+          <th class="col-allman">Allmänpension</th>
+          <th class="col-aktier">Aktier</th>
+          <th class="col-totalt">Totalt</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body">
+        <tr><td colspan="8" class="empty">Inga snapshots sparade än.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Historik &nbsp;·&nbsp; Data sparas lokalt i webbläsaren (localStorage)</footer>
+
+<script>
+const HIST_KEY = 'ek_historik';
+
+function ek(key) {
+  return parseFloat(localStorage.getItem('ek_' + key)) || 0;
+}
+
+function fmtKr(n) {
+  return Math.round(n).toLocaleString('sv-SE') + ' kr';
+}
+
+function fmtM(n) {
+  return (n / 1e6).toFixed(2) + ' MSEK';
+}
+
+function buildSnapshot() {
+  const nokSek = ek('bal_nok_sek') || 0.97;
+  const fonder  = ek('bal_lysaf') + ek('bal_lysau') + ek('bal_buffert') + ek('bal_sparkonto');
+  const tjp     = ek('bal_tjpf')  + ek('bal_lonevxl') + ek('bal_tidligare') + ek('bal_kapan') + ek('bal_tjpu');
+  const norge   = ek('bal_norgef') + ek('bal_dnbf') + ek('bal_sbf') + ek('bal_sbu') + ek('bal_dnbu');
+  const allman  = ek('bal_ap_f') + ek('bal_pp_f') + ek('bal_ap_u') + ek('bal_pp_u') + (ek('bal_nav_f') + ek('bal_nav_u')) * nokSek;
+  const aktier  = ek('bal_norco_antal') * ek('bal_norco_kurs') + ek('bal_oncop_antal') * ek('bal_oncop_kurs');
+  const totalt  = fonder + tjp + norge + allman + aktier;
+  const date    = new Date().toISOString().slice(0, 10);
+  return { date, fonder, tjp, norge, allman, aktier, totalt };
+}
+
+function saveSnapshot() {
+  const hist = load();
+  const snap = buildSnapshot();
+  hist.push(snap);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  const msg = document.getElementById('save-msg');
+  msg.textContent = '✓ Snapshot sparad ' + snap.date;
+  setTimeout(() => msg.textContent = '', 3000);
+  render(hist);
+}
+
+function deleteSnapshot(i) {
+  const hist = load();
+  hist.splice(i, 1);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  render(hist);
+}
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+}
+
+let lineChart = null;
+
+function render(hist) {
+  // ── Tabell ──────────────────────────────────────────────────────────────
+  const tbody = document.getElementById('tbl-body');
+  if (!hist.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Inga snapshots sparade än.</td></tr>';
+  } else {
+    tbody.innerHTML = hist.map((s, i) => `
+      <tr>
+        <td>${s.date}</td>
+        <td class="col-fonder">${fmtKr(s.fonder)}</td>
+        <td class="col-tjp">${fmtKr(s.tjp)}</td>
+        <td class="col-norge">${fmtKr(s.norge)}</td>
+        <td class="col-allman">${fmtKr(s.allman)}</td>
+        <td class="col-aktier">${fmtKr(s.aktier)}</td>
+        <td class="col-totalt">${fmtM(s.totalt)}</td>
+        <td><button class="btn-red" onclick="deleteSnapshot(${i})">Ta bort</button></td>
+      </tr>`).join('');
+  }
+
+  // ── Diagram ─────────────────────────────────────────────────────────────
+  const labels   = hist.map(s => s.date);
+  const datasets = [
+    { label: 'Privata fonder', data: hist.map(s => s.fonder),  borderColor: '#4f8ef7', backgroundColor: '#4f8ef720', tension: .3, fill: false },
+    { label: 'TjP & LöneVXL', data: hist.map(s => s.tjp),     borderColor: '#6ee7b7', backgroundColor: '#6ee7b720', tension: .3, fill: false },
+    { label: 'TjP Norge',      data: hist.map(s => s.norge),   borderColor: '#f87171', backgroundColor: '#f8717120', tension: .3, fill: false },
+    { label: 'Allmänpension',  data: hist.map(s => s.allman),  borderColor: '#22d3ee', backgroundColor: '#22d3ee20', tension: .3, fill: false },
+    { label: 'Aktier',         data: hist.map(s => s.aktier),  borderColor: '#f59e0b', backgroundColor: '#f59e0b20', tension: .3, fill: false },
+    { label: 'Totalt',         data: hist.map(s => s.totalt),  borderColor: '#a78bfa', backgroundColor: '#a78bfa20', tension: .3, fill: false, borderWidth: 3 },
+  ];
+
+  if (lineChart) {
+    lineChart.data.labels   = labels;
+    lineChart.data.datasets = datasets;
+    lineChart.update();
+  } else {
+    lineChart = new Chart(document.getElementById('lineChart'), {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#e2e8f0', boxWidth: 14 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString('sv-SE')} kr` } }
+        },
+        scales: {
+          x: { ticks: { color: '#8892a4' }, grid: { color: '#2d3348' } },
+          y: { ticks: { color: '#8892a4', callback: v => (v/1e6).toFixed(1) + ' M' }, grid: { color: '#2d3348' } }
+        }
+      }
+    });
+  }
+}
+
+// Seed historiska snapshots om de saknas
+(function() {
+  const existing = load();
+  const seedDates = ['2026-06-20','2026-06-30','2026-07-05','2026-07-16'];
+  const hasSeed = seedDates.every(d => existing.some(e => e.date === d));
+  if (!hasSeed) {
+    const seed = [
+      {"date":"2026-06-20","fonder":792699,"tjp":1071468,"norge":1577015,"allman":6491440,"aktier":912368,"totalt":10844990},
+      {"date":"2026-06-30","fonder":864894,"tjp":1120827,"norge":1607916,"allman":6538328,"aktier":849615,"totalt":10981580},
+      {"date":"2026-07-05","fonder":865594,"tjp":1120827,"norge":1589199,"allman":6538328,"aktier":904104,"totalt":11018052},
+      {"date":"2026-07-16","fonder":1038372,"tjp":1142699,"norge":1595079,"allman":6533081,"aktier":873961,"totalt":11183192},
+    ];
+    const merged = [...seed.filter(s => !existing.some(e => e.date === s.date)), ...existing];
+    merged.sort((a,b) => a.date.localeCompare(b.date));
+    localStorage.setItem(HIST_KEY, JSON.stringify(merged));
+  }
+})();
+
+render(load());
+
+// ── Google Sheets Sync (read-only) ───────────────────────────────────────────
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
+(async function() {
+  if (!SYNC_URL) return;
+  try {
+    const resp = await fetch(SYNC_URL + '?action=read');
+    const data = await resp.json();
+    Object.entries(data).forEach(([key, val]) => {
+      if (key.startsWith('ek_')) localStorage.setItem(key, val);
+    });
+  } catch(e) { console.warn('Sheet sync misslyckades', e); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekonomisk Översikt</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --card:#1a1d27; --card2:#21263a;
+    --text:#e2e8f0; --muted:#8892a4; --border:#2d3348;
+    --radius:14px; --shadow:0 4px 24px rgba(0,0,0,.4);
+    --blue:#4f8ef7; --green:#6ee7b7; --cyan:#22d3ee;
+    --orange:#f59e0b; --purple:#a78bfa; --red:#f87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:24px; }
+  h1 { font-size:2rem; font-weight:700; color:var(--blue); margin-bottom:4px; }
+  h2 { font-size:1rem; font-weight:700; color:var(--green); margin-bottom:16px; text-transform:uppercase; letter-spacing:.07em; }
+  .subtitle { color:var(--muted); margin-bottom:28px; font-size:.9rem; }
+  section { margin-bottom:40px; }
+  hr { border:none; border-top:1px solid var(--border); margin:36px 0; }
+
+  /* KPI bar */
+  .kpi-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:32px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; text-align:center; }
+  .kpi .label { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.07em; margin-bottom:6px; }
+  .kpi .value { font-size:1.6rem; font-weight:800; }
+  .kpi.pos .value { color:var(--green); }
+  .kpi.neg .value { color:var(--red); }
+  .kpi.neu .value { color:var(--blue); }
+  .kpi.pur .value { color:var(--purple); }
+
+  /* Cards */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; border-left:4px solid var(--border); }
+  .card.blue   { border-left-color:var(--blue); }
+  .card.green  { border-left-color:var(--green); }
+  .card.cyan   { border-left-color:var(--cyan); }
+  .card.orange { border-left-color:var(--orange); }
+  .card.purple { border-left-color:var(--purple); }
+  .card.red    { border-left-color:var(--red); }
+  .card-title { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+  .card.blue   .card-title { color:var(--blue); }
+  .card.green  .card-title { color:var(--green); }
+  .card.cyan   .card-title { color:var(--cyan); }
+  .card.orange .card-title { color:var(--orange); }
+  .card.purple .card-title { color:var(--purple); }
+  .card.red    .card-title { color:var(--red); }
+
+  /* Grids */
+  .grid-2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+
+  /* Inkomst/Utgift rader */
+  .row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
+  .row:last-child { border-bottom:none; }
+  .row .lbl { color:var(--muted); font-size:.85rem; }
+  .row .val { color:var(--text); font-weight:600; }
+  .row-total { display:flex; justify-content:space-between; align-items:center; padding:10px 0 2px; margin-top:4px; }
+  .row-total .lbl { font-weight:700; font-size:.85rem; }
+
+  /* Inputs */
+  input[type=number] {
+    background:var(--card2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:5px 10px; font-size:.9rem; width:110px; text-align:right;
+    -moz-appearance:textfield;
+  }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
+  input[type=number]:focus { outline:none; border-color:var(--blue); }
+
+  /* Balansräkning */
+  .bal-section { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  @media(max-width:640px) { .bal-section { grid-template-columns:1fr; } }
+  .bal-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-size:.9rem; }
+  .bal-item:last-child { border-bottom:none; }
+  .bal-item .lbl { color:var(--muted); }
+  .bal-total { display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; padding:12px 0 0; margin-top:6px; border-top:1px solid var(--border); }
+
+  /* Nettovärde */
+  .nettovarde { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; margin-top:16px; }
+  .nettovarde .label { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
+  .nettovarde .value { font-size:2.2rem; font-weight:900; }
+
+  /* Diagram */
+  .chart-wrap { max-height:300px; display:flex; justify-content:center; }
+
+  /* Länk */
+  .link-fire { display:inline-block; background:var(--blue); color:#fff; padding:12px 28px; border-radius:10px; font-weight:700; text-decoration:none; font-size:.95rem; margin-top:8px; }
+  .link-fire:hover { opacity:.85; }
+
+  /* Spara-knapp */
+  .save-note { color:var(--muted); font-size:.75rem; font-style:italic; margin-top:8px; }
+
+  footer { color:var(--muted); font-size:.8rem; margin-top:40px; }
+</style>
+</head>
+<body>
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f1117;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border-radius:16px;padding:40px;width:320px;text-align:center;border:1px solid #2d3348;">
+    <div style="font-size:1.5rem;font-weight:700;color:#4f8ef7;margin-bottom:8px;">Verdu Ekonomi</div>
+    <div style="color:#8892a4;font-size:.9rem;margin-bottom:24px;">Ange lösenord för att fortsätta</div>
+    <input id="auth-pw" type="password" placeholder="Lösenord" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2d3348;background:#0f1117;color:#e2e8f0;font-size:1rem;margin-bottom:12px;outline:none;">
+    <button onclick="checkAuth()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#4f8ef7;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">Logga in</button>
+    <div id="auth-err" style="color:#f87171;margin-top:12px;font-size:.85rem;min-height:20px;"></div>
+  </div>
+</div>
+<script>
+  (function() {
+    if (sessionStorage.getItem('auth') === '1') document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkAuth(); });
+  })();
+  function checkAuth() {
+    if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+    } else {
+      document.getElementById('auth-err').textContent = 'Fel lösenord';
+      document.getElementById('auth-pw').value = '';
+    }
+  }
+</script>
+
+<h1>Ekonomisk Översikt</h1>
+<p class="subtitle">Alla värden sparas automatiskt i webbläsaren &nbsp;·&nbsp; Senast uppdaterad: <span id="last-saved">—</span> &nbsp;·&nbsp; ☁ <span id="sync-status" style="color:var(--muted);">—</span></p>
+
+<!-- KPI-kort -->
+<div class="kpi-bar">
+  <div class="kpi pos">
+    <div class="label">Inkomster/mån</div>
+    <div class="value" id="kpi-in">—</div>
+  </div>
+  <div class="kpi neg">
+    <div class="label">Utgifter/mån</div>
+    <div class="value" id="kpi-ut">—</div>
+  </div>
+  <div class="kpi" id="kpi-saldo-card">
+    <div class="label">Månadssaldo</div>
+    <div class="value" id="kpi-saldo">—</div>
+  </div>
+  <div class="kpi pur">
+    <div class="label">Sparkvot</div>
+    <div class="value" id="kpi-sparkvot">—</div>
+  </div>
+  <div class="kpi neu">
+    <div class="label">Nettovärde</div>
+    <div class="value" id="kpi-netto">—</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- INKOMSTER -->
+<section>
+  <h2>Inkomster &amp; Utgifter</h2>
+  <div class="grid-3">
+
+    <div class="card green">
+      <div class="card-title">Inkomster / mån</div>
+      <div class="row"><span class="lbl">Felipe (netto)</span><input type="number" data-key="in_felipe" value="41500" step="500"></div>
+      <div class="row"><span class="lbl">Ulrika (netto)</span><input type="number" data-key="in_ulrika" value="27000" step="500"></div>
+      <div class="row"><span class="lbl">Vårdnadsbidrag</span><input type="number" data-key="in_vard" value="4250" step="250"></div>
+      <div class="row"><span class="lbl">Barnbidrag</span><input type="number" data-key="in_barn" value="1250" step="250"></div>
+      <div class="row"><span class="lbl">Hyra Lägenhet</span><input type="number" data-key="in_lagenhet" value="3800" step="100"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-in" style="color:var(--green)">—</span></div>
+    </div>
+
+    <div class="card blue">
+      <div class="card-title">Boende / mån</div>
+      <div class="row"><span class="lbl">Lån Villa</span><input type="number" data-key="ut_lan1" value="10150" step="100"></div>
+      <div class="row"><span class="lbl">Lån Lägenhet</span><input type="number" data-key="ut_lan_lag" value="3800" step="100"></div>
+      <div class="row"><span class="lbl">Vatten</span><input type="number" data-key="ut_vatten" value="795" step="50"></div>
+      <div class="row"><span class="lbl">El (Tibber)</span><input type="number" data-key="ut_tibber" value="1694" step="100"></div>
+      <div class="row"><span class="lbl">Alingsås energi</span><input type="number" data-key="ut_energi" value="2518" step="100"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-boende" style="color:var(--blue)">—</span></div>
+    </div>
+
+    <div class="card green">
+      <div class="card-title">Transport / mån</div>
+      <div class="row"><span class="lbl">KIA EV2 leasing</span><input type="number" data-key="ut_kia" value="4231" step="100"></div>
+      <div class="row"><span class="lbl">KIA EV2</span><input type="number" data-key="ut_eup" value="3103" step="100"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-transport" style="color:var(--green)">—</span></div>
+    </div>
+
+    <div class="card cyan">
+      <div class="card-title">Telefoni / mån</div>
+      <div class="row"><span class="lbl">Streaming</span><input type="number" data-key="ut_telia" value="1178" step="50"></div>
+      <div class="row"><span class="lbl">Bredband Fiber</span><input type="number" data-key="ut_telenor" value="425" step="50"></div>
+      <div class="row"><span class="lbl">Mobilabonnemang</span><input type="number" data-key="ut_tre" value="1179" step="50"></div>
+      <div class="row"><span class="lbl">Bredband 5G</span><input type="number" data-key="ut_bredband5g" value="300" step="50"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-telefoni" style="color:var(--cyan)">—</span></div>
+    </div>
+
+    <div class="card orange">
+      <div class="card-title">Försäkringar / mån</div>
+      <div class="row"><span class="lbl">Hemförsäkring</span><input type="number" data-key="ut_hem" value="411" step="50"></div>
+      <div class="row"><span class="lbl">Tryghansa</span><input type="number" data-key="ut_trygg" value="1217" step="50"></div>
+      <div class="row"><span class="lbl">Skandia (liv)</span><input type="number" data-key="ut_skandia" value="12" step="5"></div>
+      <div class="row"><span class="lbl">IF skadef</span><input type="number" data-key="ut_if" value="781" step="50"></div>
+      <div class="row"><span class="lbl">SV Lärarnas</span><input type="number" data-key="ut_svl" value="1072" step="25"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-forsakring" style="color:var(--orange)">—</span></div>
+    </div>
+
+    <div class="card purple">
+      <div class="card-title">Fack &amp; Övrigt / mån</div>
+      <div class="row"><span class="lbl">Ledarna</span><input type="number" data-key="ut_led" value="428" step="25"></div>
+      <div class="row"><span class="lbl">Ledarnas AKAS</span><input type="number" data-key="ut_akas" value="150" step="25"></div>
+      <div class="row"><span class="lbl">Lärarnas AKAS</span><input type="number" data-key="ut_akas_l" value="150" step="25"></div>
+      <div class="row"><span class="lbl">CSN</span><input type="number" data-key="ut_csn" value="1741" step="50"></div>
+      <div class="row"><span class="lbl">Hjärnfonden</span><input type="number" data-key="ut_hjarn" value="200" step="50"></div>
+      <div class="row"><span class="lbl">Friskis</span><input type="number" data-key="ut_friskis" value="450" step="50"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-ovrigt" style="color:var(--purple)">—</span></div>
+    </div>
+
+    <div class="card red">
+      <div class="card-title">Sparande / mån</div>
+      <div class="row"><span class="lbl">Lysa (Felipe)</span><input type="number" data-key="spar_lysaf" value="5000" step="500"></div>
+      <div class="row"><span class="lbl">Lysa (Ulrika)</span><input type="number" data-key="spar_lysau" value="8500" step="500"></div>
+      <div class="row"><span class="lbl">Lysa Buffert</span><input type="number" data-key="spar_buffert" value="8700" step="500"></div>
+      <div class="row"><span class="lbl">Lysa N</span><input type="number" data-key="spar_avanzaN" value="850" step="100"></div>
+      <div class="row"><span class="lbl">Borgo Bank</span><input type="number" data-key="spar_borgo" value="2000" step="100"></div>
+      <div class="row"><span class="lbl">Resor</span><input type="number" data-key="ut_resor" value="1000" step="100"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-spar" style="color:var(--red)">—</span></div>
+    </div>
+
+    <div class="card" style="border-left-color:#fb923c;">
+      <div class="card-title" style="color:#fb923c;">Övriga utgifter / mån</div>
+      <div class="row"><span class="lbl">MC Felipe</span><input type="number" data-key="ut_mc_f" value="0" step="100"></div>
+      <div class="row"><span class="lbl">MC Ulrika</span><input type="number" data-key="ut_mc_u" value="0" step="100"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-ovriga" style="color:#fb923c;">—</span></div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;">
+      <div class="card-title" style="color:var(--muted);border:none;margin:0;padding:0;">Utgiftsfördelning</div>
+      <div class="chart-wrap" style="width:100%;max-width:260px;">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr>
+
+<!-- BALANSRÄKNING -->
+<section>
+  <h2>Balansräkning</h2>
+  <div class="bal-section">
+
+    <div class="card green">
+      <div class="card-title">Tillgångar</div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Privata fonder</div>
+      <div class="bal-item"><span class="lbl">Lysa (Felipe)</span><input type="number" data-key="bal_lysaf" value="211429" step="1000"></div>
+      <div class="bal-item"><span class="lbl">Lysa (Ulrika)</span><input type="number" data-key="bal_lysau" value="154216" step="1000"></div>
+      <div class="bal-item"><span class="lbl">Buffert (Lysa)</span><input type="number" data-key="bal_buffert" value="174383" step="1000"></div>
+      <div class="bal-item"><span class="lbl">Borgo Bank</span><input type="number" data-key="bal_sparkonto" value="1850" step="500"></div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">TjP &amp; LöneVXL</div>
+      <div class="bal-item"><span class="lbl">TjP Kommun (Felipe)</span><input type="number" data-key="bal_tjpf" value="187376" step="1000"></div>
+      <div class="bal-item"><span class="lbl">LöneVXL (Felipe)</span><input type="number" data-key="bal_lonevxl" value="73175" step="1000"></div>
+      <div class="bal-item"><span class="lbl">Tidigare LöneVXL+TjP</span><input type="number" data-key="bal_tidligare" value="349526" step="1000"></div>
+      <div class="bal-item"><span class="lbl">TjP Kåpan (Felipe)</span><input type="number" data-key="bal_kapan" value="50947" step="1000"></div>
+      <div class="bal-item"><span class="lbl">TjP Kommun (Ulrika)</span><input type="number" data-key="bal_tjpu" value="298300" step="1000"></div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">TjP Norge</div>
+      <div class="bal-item"><span class="lbl">TjP Norge (Felipe)</span><input type="number" data-key="bal_norgef" value="970000" step="5000"></div>
+      <div class="bal-item"><span class="lbl">DNB (Felipe)</span><input type="number" data-key="bal_dnbf" value="212000" step="5000"></div>
+      <div class="bal-item"><span class="lbl">DNB Global Index (Felipe)</span><input type="number" data-key="bal_sbf" value="46000" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Storebrand (Ulrika)</span><input type="number" data-key="bal_sbu" value="146313" step="5000"></div>
+      <div class="bal-item"><span class="lbl">DNB (Ulrika)</span><input type="number" data-key="bal_dnbu" value="82702" step="5000"></div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">Allmänpension &amp; Premiepension</div>
+      <div class="bal-item"><span class="lbl">Allmän pension (Felipe)</span><input type="number" data-key="bal_ap_f" value="956981" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Premiepension (Felipe)</span><input type="number" data-key="bal_pp_f" value="607436" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Allmän pension (Ulrika)</span><input type="number" data-key="bal_ap_u" value="1214274" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Premiepension (Ulrika)</span><input type="number" data-key="bal_pp_u" value="663223" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Pensjonsbeholdning NAV (Felipe) NOK<br><span id="nav-f-sek" style="color:var(--muted);font-size:.75rem;font-weight:400;"></span></span><input type="number" data-key="bal_nav_f" value="2043841" step="10000"></div>
+      <div class="bal-item"><span class="lbl">Pensjonsbeholdning NAV (Ulrika) NOK<br><span id="nav-u-sek" style="color:var(--muted);font-size:.75rem;font-weight:400;"></span></span><input type="number" data-key="bal_nav_u" value="0" step="10000"></div>
+      <div class="bal-item"><span class="lbl" style="color:var(--muted);font-size:.8rem;">NOK/SEK-kurs</span><input type="number" data-key="bal_nok_sek" value="0.97" step="0.01" min="0.01"></div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">Aktier</div>
+      <div class="bal-item"><span class="lbl">NORCO — antal</span><input type="number" data-key="bal_norco_antal" value="24887" step="1"></div>
+      <div class="bal-item"><span class="lbl">NORCO — kurs (kr)</span><input type="number" data-key="bal_norco_kurs" value="41.6" step="any"></div>
+      <div class="bal-item"><span class="lbl" style="color:var(--muted);font-size:.8rem;">NORCO totalt</span><span id="norco-tot" style="font-size:.85rem;font-weight:600;color:var(--orange);">—</span></div>
+      <div class="bal-item" style="margin-top:8px;"><span class="lbl">Oncopeptides — antal</span><input type="number" data-key="bal_oncop_antal" value="7810" step="1"></div>
+      <div class="bal-item"><span class="lbl">Oncopeptides — kurs (kr)</span><input type="number" data-key="bal_oncop_kurs" value="1.48" step="any"></div>
+      <div class="bal-item"><span class="lbl" style="color:var(--muted);font-size:.8rem;">Oncopeptides totalt</span><span id="oncop-tot" style="font-size:.85rem;font-weight:600;color:var(--orange);">—</span></div>
+
+      <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">Fastighet</div>
+      <div class="bal-item"><span class="lbl">Bostad (marknadsvärde)</span><input type="number" data-key="bal_bostad" value="0" step="50000"></div>
+
+      <div class="bal-total"><span>Summa tillgångar</span><span id="tot-tillgangar" style="color:var(--green)">—</span></div>
+
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Fördelning per kategori</div>
+        <div id="tillg-breakdown"></div>
+      </div>
+    </div>
+
+    <div class="card red">
+      <div class="card-title">Skulder</div>
+      <div class="bal-item"><span class="lbl">Bolån</span><input type="number" data-key="skul_bolan" value="0" step="50000"></div>
+      <div class="bal-item"><span class="lbl">Bolån Lägenhet</span><input type="number" data-key="skul_bolan_lag" value="0" step="50000"></div>
+<div class="bal-item"><span class="lbl">Billån KIA EV2</span><input type="number" data-key="skul_eup" value="0" step="10000"></div>
+      <div class="bal-item"><span class="lbl">CSN-skuld</span><input type="number" data-key="skul_csn" value="0" step="5000"></div>
+      <div class="bal-item"><span class="lbl">Övrigt</span><input type="number" data-key="skul_ovrigt" value="0" step="10000"></div>
+      <div class="bal-total"><span>Summa skulder</span><span id="tot-skulder" style="color:var(--red)">—</span></div>
+    </div>
+  </div>
+
+  <div class="nettovarde">
+    <div class="label">Nettovärde (tillgångar − skulder)</div>
+    <div class="value" id="nettovarde-val">—</div>
+  </div>
+</section>
+
+<hr>
+
+<!-- FONDREGISTER -->
+<section>
+  <h2>Fondregister</h2>
+  <div class="card cyan">
+    <div class="card-title">Sammanställning per fond</div>
+
+    <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">ISK / Depå</div>
+    <div class="bal-item"><span class="lbl">LF Global Index</span><input type="number" data-key="fnd_lf_global" value="0" step="1000"></div>
+    <div class="bal-item"><span class="lbl">LF Sparmål 2040</span><input type="number" data-key="fnd_lf_spar2040" value="0" step="1000"></div>
+    <div class="bal-item"><span class="lbl">LF Sverige Index</span><input type="number" data-key="fnd_lf_sverige" value="0" step="1000"></div>
+    <div class="bal-item"><span class="lbl">DNB Teknologi</span><input type="number" data-key="fnd_dnb_tek" value="0" step="1000"></div>
+    <div class="bal-item"><span class="lbl">Lysa <span style="color:var(--muted);font-size:.78rem;">inkl. buffert &amp; sparkonto</span></span><span style="font-weight:600;color:var(--cyan);" id="fr-lysa">—</span></div>
+
+    <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">TjP Norge</div>
+    <div class="bal-item"><span class="lbl">DNB Global Index</span><span style="font-weight:600;color:var(--cyan);" id="fr-dnb-global">—</span></div>
+    <div class="bal-item"><span class="lbl">Storebrand</span><span style="font-weight:600;color:var(--cyan);" id="fr-storebrand">—</span></div>
+    <div class="bal-item"><span class="lbl">Pensjonskapitalbevis (DNB)</span><span style="font-weight:600;color:var(--cyan);" id="fr-pensjonskap">—</span></div>
+
+    <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">Premiepension</div>
+    <div class="bal-item"><span class="lbl">AP7 Såfa</span><span style="font-weight:600;color:var(--cyan);" id="fr-ap7">—</span></div>
+
+    <div class="bal-total" style="margin-top:8px;">
+      <span>Totalt fondvärde</span>
+      <span style="color:var(--cyan);font-size:1.1rem;" id="fr-total">—</span>
+    </div>
+    <p style="color:var(--muted);font-size:.75rem;margin-top:10px;">Lysa, TjP Norge och AP7 läses från balansräkningens värden · ISK-fonder anges manuellt</p>
+  </div>
+</section>
+
+<hr>
+
+<!-- LÄNK FIRE -->
+<section>
+  <h2>FIRE-planering</h2>
+  <p style="color:var(--muted);margin-bottom:16px;">Detaljerad FIRE-simulator med pensionsberäkningar, uttaksdiagram och breakeven-analys.</p>
+  <a class="link-fire" href="rapport_interaktiv.html">Öppna FIRE-rapporten →</a>
+  <a class="link-fire" href="historik.html" style="background:var(--purple);margin-left:12px;">Öppna Historik →</a>
+</section>
+
+<!-- EXPORT / IMPORT -->
+<section>
+  <h2>Flytta data till ny maskin</h2>
+  <p style="color:var(--muted);margin-bottom:16px;">Exportera all data som en JSON-fil och importera den på den nya maskinen.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <button onclick="exportData()" style="background:var(--green);color:#0f1117;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:.95rem;cursor:pointer;">⬇ Exportera data</button>
+    <label style="background:var(--blue);color:#fff;border-radius:10px;padding:12px 24px;font-weight:700;font-size:.95rem;cursor:pointer;">
+      ⬆ Importera data
+      <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+    </label>
+  </div>
+  <p id="import-status" style="color:var(--green);margin-top:12px;font-size:.85rem;"></p>
+</section>
+
+<footer>Ekonomisk Översikt &nbsp;·&nbsp; Alla värden sparas lokalt i webbläsaren (localStorage) &nbsp;·&nbsp; Ej finansiell rådgivning</footer>
+
+<script>
+const STORAGE_PREFIX = 'ek_';
+
+// ── localStorage helpers ──────────────────────────────────────────────────────
+function loadAll() {
+  document.querySelectorAll('input[data-key]').forEach(inp => {
+    const stored = localStorage.getItem(STORAGE_PREFIX + inp.dataset.key);
+    if (stored !== null) inp.value = stored;
+  });
+}
+
+function saveAll() {
+  document.querySelectorAll('input[data-key]').forEach(inp => {
+    localStorage.setItem(STORAGE_PREFIX + inp.dataset.key, inp.value);
+  });
+  const now = new Date().toLocaleString('sv-SE', { dateStyle:'short', timeStyle:'short' });
+  document.getElementById('last-saved').textContent = now;
+}
+
+function v(key) {
+  return parseFloat(document.querySelector(`input[data-key="${key}"]`)?.value) || 0;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('sv-SE') + ' kr';
+}
+function fmtM(n) {
+  return (n / 1e6).toFixed(2) + ' MSEK';
+}
+
+// ── Beräkningar ───────────────────────────────────────────────────────────────
+let donut = null;
+
+function recalculate() {
+  // Inkomster
+  const inTot = v('in_felipe') + v('in_ulrika') + v('in_vard') + v('in_barn') + v('in_lagenhet');
+
+  // Utgiftskategorier
+  const boende    = v('ut_lan1')  + v('ut_lan_lag') + v('ut_vatten') + v('ut_tibber') + v('ut_energi');
+  const transport = v('ut_kia')   + v('ut_eup');
+  const telefoni  = v('ut_telia') + v('ut_telenor') + v('ut_tre') + v('ut_bredband5g');
+  const forsakr   = v('ut_hem')   + v('ut_trygg')  + v('ut_skandia')+ v('ut_if') + v('ut_svl');
+  const ovrigt    = v('ut_led')   + v('ut_akas')   + v('ut_akas_l') + v('ut_csn') + v('ut_hjarn') + v('ut_friskis');
+  const spar      = v('spar_lysaf')+ v('spar_lysau')+ v('spar_buffert')+ v('spar_avanzaN')+ v('spar_borgo')+ v('ut_resor');
+  localStorage.setItem('ek_spar_total', Math.round(spar));
+  const ovriga    = v('ut_mc_f') + v('ut_mc_u');
+
+  const utTot  = boende + transport + telefoni + forsakr + ovrigt + spar + ovriga;
+  const saldo  = inTot - utTot;
+  const sparkvot = inTot > 0 ? Math.round(spar / inTot * 100) : 0;
+
+  // Balansräkning — tillgångar
+  const fonder   = v('bal_lysaf') + v('bal_lysau') + v('bal_buffert') + v('bal_sparkonto');
+  const tjp      = v('bal_tjpf')  + v('bal_lonevxl') + v('bal_tidligare') + v('bal_kapan') + v('bal_tjpu');
+  const norge    = v('bal_norgef')+ v('bal_dnbf') + v('bal_sbf') + v('bal_sbu') + v('bal_dnbu');
+  const nokSek   = v('bal_nok_sek') || 0.97;
+  const navFsek  = v('bal_nav_f') * nokSek;
+  const navUsek  = v('bal_nav_u') * nokSek;
+  const allman   = v('bal_ap_f')  + v('bal_pp_f') + v('bal_ap_u') + v('bal_pp_u') + navFsek + navUsek;
+  document.getElementById('nav-f-sek').textContent = navFsek ? '≈ ' + Math.round(navFsek).toLocaleString('sv-SE') + ' SEK' : '';
+  document.getElementById('nav-u-sek').textContent = navUsek ? '≈ ' + Math.round(navUsek).toLocaleString('sv-SE') + ' SEK' : '';
+  const norcoTot = v('bal_norco_antal') * v('bal_norco_kurs');
+  const oncopTot = v('bal_oncop_antal') * v('bal_oncop_kurs');
+  const aktier   = norcoTot + oncopTot;
+  document.getElementById('norco-tot').textContent = Math.round(norcoTot).toLocaleString('sv-SE') + ' kr';
+  document.getElementById('oncop-tot').textContent = Math.round(oncopTot).toLocaleString('sv-SE') + ' kr';
+  const bostad   = v('bal_bostad');
+  const tillgTot = fonder + tjp + norge + allman + aktier + bostad;
+
+  const skulder  = v('skul_bolan') + v('skul_bolan_lag') + v('skul_kia') + v('skul_eup') + v('skul_csn') + v('skul_ovrigt');
+  const netto    = tillgTot - skulder;
+
+  // ── Kategorifördelning tillgångar ─────────────────────────────────────────
+  const tillgKat = [
+    { lbl: 'Privata fonder', val: fonder,  color: 'var(--blue)' },
+    { lbl: 'TjP & LöneVXL', val: tjp,     color: 'var(--green)' },
+    { lbl: 'TjP Norge',      val: norge,   color: 'var(--red)' },
+    { lbl: 'Allmänpension',  val: allman,  color: 'var(--cyan)' },
+    { lbl: 'Aktier',         val: aktier,  color: 'var(--orange)' },
+    { lbl: 'Fastighet',      val: bostad,  color: 'var(--purple)' },
+  ];
+  const breakdownEl = document.getElementById('tillg-breakdown');
+  breakdownEl.innerHTML = tillgKat.filter(k => k.val > 0).map(k => {
+    const pct = tillgTot > 0 ? (k.val / tillgTot * 100).toFixed(1) : '0.0';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.82rem;border-bottom:1px solid var(--border);">
+      <span style="color:var(--muted);">${k.lbl}</span>
+      <span style="color:${k.color};font-weight:600;">${pct} %&nbsp;<span style="color:var(--muted);font-weight:400;font-size:.75rem;">${fmtM(k.val)}</span></span>
+    </div>`;
+  }).join('');
+
+  // ── Uppdatera DOM ─────────────────────────────────────────────────────────
+  document.getElementById('kpi-in').textContent      = fmt(inTot);
+  document.getElementById('kpi-ut').textContent      = fmt(utTot);
+  document.getElementById('kpi-saldo').textContent   = fmt(saldo);
+  document.getElementById('kpi-sparkvot').textContent= sparkvot + ' %';
+  document.getElementById('kpi-netto').textContent   = fmtM(netto);
+
+  const saldoCard = document.getElementById('kpi-saldo-card');
+  saldoCard.className = 'kpi ' + (saldo >= 0 ? 'pos' : 'neg');
+
+  document.getElementById('tot-in').textContent        = fmt(inTot);
+  document.getElementById('tot-boende').textContent    = fmt(boende);
+  document.getElementById('tot-transport').textContent = fmt(transport);
+  document.getElementById('tot-telefoni').textContent  = fmt(telefoni);
+  document.getElementById('tot-forsakring').textContent= fmt(forsakr);
+  document.getElementById('tot-ovrigt').textContent    = fmt(ovrigt);
+  document.getElementById('tot-spar').textContent      = fmt(spar);
+  document.getElementById('tot-ovriga').textContent    = fmt(ovriga);
+
+  document.getElementById('tot-tillgangar').textContent = fmtM(tillgTot);
+  document.getElementById('tot-skulder').textContent    = fmt(skulder);
+
+  const nettoEl = document.getElementById('nettovarde-val');
+  nettoEl.textContent = fmtM(netto);
+  nettoEl.style.color = netto >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('kpi-netto').textContent = fmtM(netto);
+
+  // ── Donut ────────────────────────────────────────────────────────────────
+  const donutData = [boende, transport, telefoni, forsakr, ovrigt, spar, ovriga];
+  const donutLabels = ['Boende','Transport','Telefoni','Försäkringar','Fack & Övrigt','Sparande','Övriga utgifter'];
+  const donutColors = ['#4f8ef7','#6ee7b7','#22d3ee','#f59e0b','#a78bfa','#f87171','#fb923c'];
+
+  if (donut) {
+    donut.data.datasets[0].data = donutData;
+    donut.update();
+  } else {
+    donut = new Chart(document.getElementById('donutChart'), {
+      type: 'doughnut',
+      data: {
+        labels: donutLabels,
+        datasets: [{ data: donutData, backgroundColor: donutColors, borderWidth: 2, borderColor: '#1a1d27' }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${Math.round(ctx.parsed).toLocaleString('sv-SE')} kr` } }
+        },
+        cutout: '60%'
+      }
+    });
+  }
+
+  // ── Fondregister ──────────────────────────────────────────────────────────
+  const frLysa       = v('bal_lysaf') + v('bal_lysau') + v('bal_buffert') + v('bal_sparkonto');
+  const frDnbGlobal  = v('bal_dnbf')  + v('bal_sbf')   + v('bal_dnbu');
+  const frStorebrand = v('bal_sbu');
+  const frPensjonsk  = v('bal_norgef');
+  const frAp7        = v('bal_pp_f')  + v('bal_pp_u');
+  const frIsk        = v('fnd_lf_global') + v('fnd_lf_spar2040') + v('fnd_lf_sverige') + v('fnd_dnb_tek');
+  const frTotal      = frIsk + frLysa + frDnbGlobal + frStorebrand + frPensjonsk + frAp7;
+  document.getElementById('fr-lysa').textContent       = fmt(frLysa);
+  document.getElementById('fr-dnb-global').textContent = fmt(frDnbGlobal);
+  document.getElementById('fr-storebrand').textContent = fmt(frStorebrand);
+  document.getElementById('fr-pensjonskap').textContent = fmt(frPensjonsk);
+  document.getElementById('fr-ap7').textContent        = fmt(frAp7);
+  document.getElementById('fr-total').textContent      = fmt(frTotal);
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith(STORAGE_PREFIX) || key === 'ek_spar_total') {
+      data[key] = localStorage.getItem(key);
+    }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ekonomi-data-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      Object.entries(data).forEach(([key, val]) => localStorage.setItem(key, val));
+      loadAll();
+      recalculate();
+      document.getElementById('import-status').textContent = '✓ Data importerad — ' + Object.keys(data).length + ' värden återställda.';
+    } catch {
+      document.getElementById('import-status').textContent = '✗ Fel: kunde inte läsa filen.';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Google Sheets Sync ────────────────────────────────────────────────────────
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
+
+function setSyncStatus(msg, color) {
+  const el = document.getElementById('sync-status');
+  el.textContent = msg;
+  el.style.color = color || 'var(--muted)';
+}
+
+async function loadFromSheet() {
+  if (!SYNC_URL) return;
+  try {
+    setSyncStatus('Hämtar...', 'var(--cyan)');
+    const resp = await fetch(SYNC_URL + '?action=read');
+    const data = await resp.json();
+    const sheetKeys = Object.keys(data).filter(k => k.startsWith('ek_'));
+    if (sheetKeys.length === 0) {
+      // Sheet är tomt — pusha lokal data dit
+      await pushToSheet();
+    } else {
+      sheetKeys.forEach(key => localStorage.setItem(key, data[key]));
+      loadAll();
+      recalculate();
+      setSyncStatus('Synkat ' + new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}), 'var(--green)');
+    }
+  } catch(e) {
+    setSyncStatus('Sync misslyckades', 'var(--red)');
+  }
+}
+
+let syncTimer;
+function scheduleSync() {
+  if (!SYNC_URL) return;
+  clearTimeout(syncTimer);
+  setSyncStatus('Sparar...', 'var(--cyan)');
+  syncTimer = setTimeout(pushToSheet, 1500);
+}
+
+async function pushToSheet() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('ek_')) data[key] = localStorage.getItem(key);
+  }
+  try {
+    const encoded = encodeURIComponent(JSON.stringify(data));
+    await fetch(SYNC_URL + '?action=write&data=' + encoded);
+    setSyncStatus('Synkat ' + new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}), 'var(--green)');
+  } catch(e) {
+    setSyncStatus('Sync misslyckades', 'var(--red)');
+  }
+}
+
+// ── Event listeners ───────────────────────────────────────────────────────────
+document.querySelectorAll('input[data-key]').forEach(inp => {
+  inp.addEventListener('input', () => { recalculate(); saveAll(); scheduleSync(); });
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+loadAll();
+recalculate();
+loadFromSheet();
+
+// Visa sparad tidsstämpel om den finns
+const saved = localStorage.getItem(STORAGE_PREFIX + '_ts');
+if (saved) document.getElementById('last-saved').textContent = saved;
+</script>
+</body>
+</html>

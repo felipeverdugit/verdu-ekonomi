@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekonomisk Översikt — Interaktiv</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --card:#1a1d27; --card2:#21263a;
+    --accent1:#4f8ef7; --accent2:#6ee7b7; --accent3:#f59e0b; --accent4:#f87171;
+    --text:#e2e8f0; --muted:#8892a4; --border:#2d3348;
+    --radius:14px; --shadow:0 4px 24px rgba(0,0,0,.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:24px; }
+  h1 { font-size:2rem; font-weight:700; color:var(--accent1); margin-bottom:4px; }
+  h2 { font-size:1.1rem; font-weight:600; color:var(--accent2); margin-bottom:16px; text-transform:uppercase; letter-spacing:.06em; }
+  h3 { font-size:.95rem; font-weight:600; color:var(--muted); margin-bottom:8px; }
+  .subtitle { color:var(--muted); margin-bottom:24px; }
+  .grid { display:grid; gap:20px; }
+  .grid-2 { grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); }
+  .grid-3 { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+  .grid-4 { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+  .kpi { text-align:center; padding:24px 16px; }
+  .kpi .label { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; }
+  .kpi .value { font-size:1.8rem; font-weight:800; margin:6px 0 2px; }
+  .kpi .sub { color:var(--muted); font-size:.8rem; }
+  .kpi-blue .value  { color:var(--accent1); }
+  .kpi-green .value { color:var(--accent2); }
+  .kpi-amber .value { color:var(--accent3); }
+  .kpi-red .value   { color:var(--accent4); }
+  .kpi-cyan .value  { color:#22d3ee; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th { text-align:left; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+  td { padding:9px 10px; border-bottom:1px solid var(--border); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--card2); }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .pos { color:var(--accent2); }
+  .neg { color:var(--accent4); }
+  .total-row td { font-weight:700; color:var(--accent1); border-top:2px solid var(--border); }
+  .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.78rem; font-weight:600; }
+  .badge-blue  { background:rgba(79,142,247,.15); color:var(--accent1); }
+  .badge-green { background:rgba(110,231,183,.15); color:var(--accent2); }
+  .badge-amber { background:rgba(245,158,11,.15); color:var(--accent3); }
+  .badge-red   { background:rgba(248,113,113,.15); color:var(--accent4); }
+  hr { border:none; border-top:1px solid var(--border); margin:32px 0; }
+  section { margin-bottom:32px; }
+  canvas { max-height:320px; }
+  footer { text-align:center; color:var(--muted); font-size:.8rem; margin-top:40px; }
+
+  /* Kontrollpanel */
+  .ctrl-panel {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:14px; margin-bottom:32px;
+  }
+  .ctrl-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:18px 20px;
+    border-left:4px solid var(--c-accent,var(--accent1));
+  }
+  .ctrl-card--blue   { --c-accent:#4f8ef7; }
+  .ctrl-card--green  { --c-accent:#6ee7b7; }
+  .ctrl-card--orange { --c-accent:#f59e0b; }
+  .ctrl-card--purple { --c-accent:#a78bfa; }
+  .ctrl-card--cyan   { --c-accent:#22d3ee; }
+  .ctrl-card--red    { --c-accent:#f87171; }
+  .ctrl-card-title {
+    font-size:.75rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--c-accent); margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .ctrl-card-body { display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; }
+  .ctrl-group { display:flex; flex-direction:column; gap:6px; min-width:130px; flex:1; }
+  .ctrl-group label {
+    color:var(--muted); font-size:.75rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:.05em;
+  }
+  .ctrl-group .ctrl-val { color:var(--c-accent); font-size:1.45rem; font-weight:800; }
+  input[type=range] {
+    -webkit-appearance:none; width:100%; height:5px;
+    border-radius:3px; background:var(--border); outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--c-accent); cursor:pointer;
+  }
+  input[type=number] {
+    background:var(--card2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:7px 11px; font-size:.95rem; width:130px;
+  }
+  .recalc-note { color:var(--muted); font-size:.75rem; font-style:italic; margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f1117;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border-radius:16px;padding:40px;width:320px;text-align:center;border:1px solid #2d3348;">
+    <div style="font-size:1.5rem;font-weight:700;color:#4f8ef7;margin-bottom:8px;">Verdu Ekonomi</div>
+    <div style="color:#8892a4;font-size:.9rem;margin-bottom:24px;">Ange lösenord för att fortsätta</div>
+    <input id="auth-pw" type="password" placeholder="Lösenord" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2d3348;background:#0f1117;color:#e2e8f0;font-size:1rem;margin-bottom:12px;outline:none;">
+    <button onclick="checkAuth()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#4f8ef7;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">Logga in</button>
+    <div id="auth-err" style="color:#f87171;margin-top:12px;font-size:.85rem;min-height:20px;"></div>
+  </div>
+</div>
+<script>
+  (function() {
+    if (sessionStorage.getItem('auth') === '1') document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkAuth(); });
+  })();
+  function checkAuth() {
+    if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+    } else {
+      document.getElementById('auth-err').textContent = 'Fel lösenord';
+      document.getElementById('auth-pw').value = '';
+    }
+  }
+</script>
+
+<h1>Ekonomisk Översikt — Interaktiv</h1>
+<p class="subtitle">Genererad 2026-07-25 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
+
+<!-- Kontrollpanel -->
+<div class="ctrl-panel">
+
+  <!-- Avkastning & Horisont -->
+  <div class="ctrl-card ctrl-card--blue">
+    <div class="ctrl-card-title">Avkastning &amp; Horisont</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Årsavkastning</label>
+        <span class="ctrl-val"><span id="val-avk">10</span> %</span>
+        <input type="range" id="slider-avk" min="2" max="20" step="0.5" value="10.0">
+      </div>
+      <div class="ctrl-group">
+        <label>Antal år (horisont)</label>
+        <span class="ctrl-val"><span id="val-ar">10</span> år</span>
+        <input type="range" id="slider-ar" min="1" max="25" step="1" value="10.0">
+      </div>
+      <div class="ctrl-group">
+        <label>Uttaksavkastning</label>
+        <span class="ctrl-val"><span id="val-uttavk">2</span> %</span>
+        <input type="range" id="slider-uttavk" min="0" max="8" step="0.5" value="2">
+      </div>
+    </div>
+  </div>
+
+  <!-- Kostnader & Aktier -->
+  <div class="ctrl-card ctrl-card--green">
+    <div class="ctrl-card-title">Kostnader &amp; Aktier</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Levnadskostnad period 1 /mån</label>
+        <input type="number" id="input-exp" value="65000" step="1000">
+      </div>
+      <div class="ctrl-group">
+        <label>Antal år period 1</label>
+        <input type="number" id="input-exp-switch" value="10" step="1" min="1">
+      </div>
+      <div class="ctrl-group">
+        <label>Levnadskostnad period 2 /mån</label>
+        <input type="number" id="input-exp2" value="50000" step="1000">
+      </div>
+      <div class="ctrl-group">
+        <label>Period 1 — Felipe</label>
+        <input type="number" id="input-exp-f" value="32500" step="500">
+      </div>
+      <div class="ctrl-group">
+        <label>Period 1 — Ulrika</label>
+        <input type="number" id="input-exp-u" value="32500" step="500">
+      </div>
+      <div class="ctrl-group">
+        <label>NORCO — antal</label>
+        <input type="number" id="input-norco-antal" value="24887" step="1" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>NORCO — kurs (kr)</label>
+        <input type="number" id="input-norco-kurs" value="41.6" step="any" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Oncopeptides — antal</label>
+        <input type="number" id="input-oncop-antal" value="7810" step="1" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Oncopeptides — kurs (kr)</label>
+        <input type="number" id="input-oncop-kurs" value="0" step="any" min="0">
+      </div>
+      <div class="ctrl-group" style="min-width:unset;flex:0;">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:4px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.8rem;color:var(--text);">
+          <input type="checkbox" id="check-aktier-fire" checked style="width:15px;height:15px;accent-color:var(--c-accent);cursor:pointer;">
+          Inkludera i FIRE
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pension -->
+  <div class="ctrl-card ctrl-card--orange">
+    <div class="ctrl-card-title">Pension</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>TjP uttaksperiod</label>
+        <span class="ctrl-val"><span id="val-tjp-ar">20</span> år</span>
+        <input type="range" id="slider-tjp-ar" min="10" max="40" step="1" value="20">
+      </div>
+      <div class="ctrl-group">
+        <label>Felipe: TjP Sverige startålder</label>
+        <span class="ctrl-val"><span id="val-f-tjp-alder">65</span> år</span>
+        <input type="range" id="slider-f-tjp-alder" min="62" max="70" step="1" value="65">
+      </div>
+      <div class="ctrl-group">
+        <label>Felipe: TjP Norge startålder</label>
+        <span class="ctrl-val"><span id="val-f-norsk-tjp-alder">62</span> år</span>
+        <input type="range" id="slider-f-norsk-tjp-alder" min="62" max="70" step="1" value="62">
+      </div>
+      <div class="ctrl-group">
+        <label>Ulrika: TjP startålder</label>
+        <span class="ctrl-val"><span id="val-u-tjp-alder">65</span> år</span>
+        <input type="range" id="slider-u-tjp-alder" min="62" max="70" step="1" value="65">
+      </div>
+      <div class="ctrl-group">
+        <label>Felipe: Allmänpension</label>
+        <span class="ctrl-val"><span id="val-f-allman-alder">68</span> år</span>
+        <input type="range" id="slider-f-allman-alder" min="62" max="70" step="1" value="68">
+      </div>
+      <div class="ctrl-group">
+        <label>Ulrika: Allmänpension</label>
+        <span class="ctrl-val"><span id="val-u-allman-alder">68</span> år</span>
+        <input type="range" id="slider-u-allman-alder" min="62" max="70" step="1" value="68">
+      </div>
+      <div class="ctrl-group">
+        <label>Skatt på pensioner</label>
+        <span class="ctrl-val"><span id="val-skatt">30</span> %</span>
+        <input type="range" id="slider-skatt" min="0" max="55" step="1" value="30">
+      </div>
+      <div class="ctrl-group">
+        <label>Borgo Bank ränta</label>
+        <span class="ctrl-val"><span id="val-borgo-ranta">2.3</span> %</span>
+        <input type="range" id="slider-borgo-ranta" min="0" max="6" step="0.1" value="2.3">
+      </div>
+    </div>
+  </div>
+
+  <!-- Fondvärden idag -->
+  <div class="ctrl-card ctrl-card--purple">
+    <div class="ctrl-card-title">Fondvärden idag</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Lysa — Felipe</label>
+        <input type="number" id="input-lysa-fv" value="211429" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Lysa — Ulrika</label>
+        <input type="number" id="input-lysa-uv" value="154216" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Buffert (Lysa)</label>
+        <input type="number" id="input-buffert-uv" value="174383" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>TjP Kommun — Felipe</label>
+        <input type="number" id="input-tjp-f" value="187376" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>LöneVXL — Felipe</label>
+        <input type="number" id="input-lonevxl-pv" value="73175" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Tidigare LöneVXL+TjP — Felipe</label>
+        <input type="number" id="input-tidligare" value="349526" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>TjP Kåpan — Felipe</label>
+        <input type="number" id="input-kapan" value="50947" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>TjP Kommun — Ulrika</label>
+        <input type="number" id="input-tjp-u" value="298300" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Premiepension (AP7) — Felipe</label>
+        <input type="number" id="input-pp-f" value="0" step="1000" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>Premiepension (AP7) — Ulrika</label>
+        <input type="number" id="input-pp-u" value="0" step="1000" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Insättningar -->
+  <div class="ctrl-card ctrl-card--cyan">
+    <div class="ctrl-card-title">Insättningar / mån</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Fonder</label>
+        <input type="number" id="input-fonder-pmt" value="20070" step="500" min="0">
+      </div>
+      <div class="ctrl-group">
+        <label>LöneVXL</label>
+        <input type="number" id="input-lonevxl-pmt" value="11638" step="500" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Engångsuttag -->
+  <div class="ctrl-card ctrl-card--red">
+    <div class="ctrl-card-title">Engångsuttag</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Belopp</label>
+        <input type="number" id="input-uttag-belopp" value="0" step="50000" min="0" placeholder="0 = inaktivt">
+      </div>
+      <div class="ctrl-group">
+        <label>År</label>
+        <input type="number" id="input-uttag-ar" value="2026" step="1" min="2026">
+      </div>
+    </div>
+    <div class="recalc-note" style="margin-top:12px;">Allt uppdateras automatiskt</div>
+  </div>
+
+</div>
+
+<!-- KPI-kort -->
+<section>
+  <h2>Nuläge — totalt kapital &nbsp;<span id="kpi-nu-tot" style="color:var(--blue);font-size:1.1rem;font-weight:900;"></span></h2>
+  <div class="grid grid-4">
+    <div class="card kpi kpi-blue">
+      <div class="label">Privata fonder</div>
+      <div class="value" id="kpi-fonder-nu">—</div>
+      <div class="sub">ISK/depå</div>
+    </div>
+    <div class="card kpi kpi-amber">
+      <div class="label">Aktier</div>
+      <div class="value" id="kpi-aktier-nu">—</div>
+      <div class="sub" id="kpi-aktier-sub">NORCO m.fl. (dagsvärde)</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">TjP Felipe</div>
+      <div class="value" id="kpi-tjp-f-nu">—</div>
+      <div class="sub">Kommun + Kåpan</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">LöneVXL Felipe</div>
+      <div class="value" id="kpi-lonevxl-nu">—</div>
+      <div class="sub">Aktiv + tidigare lönväxling</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">TjP Ulrika</div>
+      <div class="value" id="kpi-tjp-u-nu">—</div>
+      <div class="sub">UV Kommun</div>
+    </div>
+    <div class="card kpi kpi-red">
+      <div class="label">TjP Norge</div>
+      <div class="value" id="kpi-norge-nu">—</div>
+      <div class="sub">DNB, Storebrand m.fl.</div>
+    </div>
+    <div class="card kpi kpi-blue">
+      <div class="label">Premiepension (AP7)</div>
+      <div class="value" id="kpi-pp-nu">—</div>
+      <div class="sub">Felipe + Ulrika</div>
+    </div>
+    <div class="card kpi kpi-cyan">
+      <div class="label">Inkomstpension SE</div>
+      <div class="value" id="kpi-ap-nu">—</div>
+      <div class="sub">Felipe + Ulrika</div>
+    </div>
+    <div class="card kpi kpi-cyan">
+      <div class="label">Pension NAV (NO)</div>
+      <div class="value" id="kpi-nav-nu">—</div>
+      <div class="sub">Norsk behållning</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">Borgo Bank</div>
+      <div class="value" id="kpi-borgo-nu">—</div>
+      <div class="sub">Sparkonto</div>
+    </div>
+  </div>
+</section>
+
+<!-- Framtida värden -->
+<section>
+  <h2>Om <span id="lbl-ar">10</span> år — projekterat kapital (<span id="lbl-avk">10</span>% avkastning) &nbsp;<span id="kpi-fv-tot" style="color:var(--blue);font-size:1.1rem;font-weight:900;"></span></h2>
+  <div class="grid grid-3">
+    <div class="card kpi kpi-blue">
+      <div class="label">Privata fonder</div>
+      <div class="value" id="kpi-fonder-fv">—</div>
+      <div class="sub">Felipe + Ulrika</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">TjP Felipe</div>
+      <div class="value" id="kpi-tjp-f-fv">—</div>
+      <div class="sub">Kommun + Kåpan</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">LöneVXL Felipe</div>
+      <div class="value" id="kpi-lonevxl-fv">—</div>
+      <div class="sub">Aktiv + tidigare lönväxling</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">TjP Ulrika</div>
+      <div class="value" id="kpi-tjp-u-fv">—</div>
+      <div class="sub">UV Kommun</div>
+    </div>
+    <div class="card kpi kpi-red">
+      <div class="label">TjP Norge</div>
+      <div class="value" id="kpi-norge-fv">—</div>
+      <div class="sub">Norsk tjänstepension</div>
+    </div>
+    <div class="card kpi kpi-blue">
+      <div class="label">Premiepension (AP7)</div>
+      <div class="value" id="kpi-pp-fv">—</div>
+      <div class="sub">Felipe + Ulrika</div>
+    </div>
+    <div class="card kpi kpi-cyan">
+      <div class="label">Inkomstpension SE</div>
+      <div class="value" id="kpi-ap-fv">—</div>
+      <div class="sub">Felipe + Ulrika (dagsvärde)</div>
+    </div>
+    <div class="card kpi kpi-cyan">
+      <div class="label">Pension NAV (NO)</div>
+      <div class="value" id="kpi-nav-fv">—</div>
+      <div class="sub">Norsk behållning (dagsvärde)</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">Borgo Bank</div>
+      <div class="value" id="kpi-borgo-fv">—</div>
+      <div class="sub" id="kpi-borgo-fv-sub">2.3% ränta + 2 000 kr/mån</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;" class="grid grid-2">
+    <div class="card kpi kpi-amber">
+      <div class="label">Aktier (dagsvärde)</div>
+      <div class="value" id="kpi-aktier-fv">—</div>
+      <div class="sub">Justeras i kontrollpanelen</div>
+    </div>
+    <div class="card kpi kpi-green">
+      <div class="label">Totalt inkl. aktier</div>
+      <div class="value" id="kpi-totalt-fv" style="font-size:2.4rem;">—</div>
+      <div class="sub">Fonder + Aktier + TjP + PP + Inkomstpension + NAV</div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- Diagram -->
+<section>
+  <h2>Kapitalfördelning</h2>
+  <div class="grid grid-2">
+    <div class="card"><h3>Idag</h3><canvas id="pieNu"></canvas></div>
+    <div class="card"><h3>Om <span id="lbl-ar2">10</span> år</h3><canvas id="pieFv"></canvas></div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <h2>Tillväxt per kategori</h2>
+    <canvas id="lineChart" style="max-height:340px;"></canvas>
+  </div>
+</section>
+
+<hr>
+
+<!-- Uttaksdiagram -->
+<section>
+  <div id="breakeven-box" class="card" style="margin-bottom:20px;padding:20px 24px;border-color:var(--accent2);">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:2rem;">⚡</div>
+      <div>
+        <div style="color:var(--accent2);font-weight:700;font-size:1rem;text-transform:uppercase;letter-spacing:.06em;">Rekommenderad FIRE-horisont</div>
+        <div id="breakeven-text" style="color:var(--text);font-size:1.5rem;font-weight:800;margin-top:4px;">Beräknar...</div>
+        <div id="breakeven-sub" style="color:var(--muted);font-size:.85rem;margin-top:4px;">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Fondbalans efter FIRE — år för år</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;" id="uttag-desc">—</p>
+    <canvas id="uttakChart" style="max-height:380px;"></canvas>
+  </div>
+  <div class="card">
+    <h2>Felipe — fondbalans efter FIRE</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;" id="uttag-desc-f">—</p>
+    <canvas id="uttakChartF" style="max-height:340px;"></canvas>
+  </div>
+  <div class="card">
+    <h2>Ulrika — fondbalans efter FIRE</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;" id="uttag-desc-u">—</p>
+    <canvas id="uttakChartU" style="max-height:340px;"></canvas>
+  </div>
+</section>
+
+<hr>
+
+<!-- Allmän pension -->
+<section>
+  <h2>Allmän pension</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Norsk alderspensjon (NAV) — vid 67 år</h3>
+      <table>
+        <tr><th>Post</th><th class="num">Felipe/mån</th><th class="num">Ulrika/mån</th></tr>
+        <tr><td>Inntektspensjon</td>
+          <td class="num">9 406 kr</td>
+          <td class="num">9 000 kr</td></tr>
+        <tr><td>Garantipensjon</td>
+          <td class="num">5 556 kr</td>
+          <td class="num">5 000 kr</td></tr>
+        <tr class="total-row"><td>Summa</td>
+          <td class="num">14 962 kr</td>
+          <td class="num">14 000 kr</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Svensk allmän pension</h3>
+      <table>
+        <tr><th>Vem</th><th class="num">Uttaksålder</th><th class="num">Belopp/mån</th></tr>
+        <tr><td>Felipe</td><td class="num">68 år</td><td class="num pos">18 700 kr</td></tr>
+        <tr><td>Ulrika</td><td class="num">68 år</td><td class="num pos">16 800 kr</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FIRE-tabell -->
+<section>
+  <h2>FIRE-färdplan — fas för fas</h2>
+  <div class="card" style="overflow-x:auto;">
+    <table id="fire-table">
+      <thead>
+        <tr>
+          <th>Fas</th><th>År</th><th>Ålder</th><th>Händelse</th>
+          <th class="num">Felipe/mån</th><th class="num">Ulrika/mån</th>
+          <th class="num">Totalt/mån</th><th class="num">Gap (fonder)</th>
+        </tr>
+      </thead>
+      <tbody id="fire-tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Rapport genererad 2026-07-25 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
+</footer>
+
+<script>
+// ── Rådata från Excel ─────────────────────────────────────────────────────
+const KONTON  = [{"namn": "Lönväxling", "pv": 73175.0, "pmt": 11638.0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "TjP Kommun (Felipe)", "pv": 187376.0, "pmt": 25000.0, "frekvens": "kvartal", "arbetsrelaterad": true}, {"namn": "TjP UV Kommun (Ulrika)", "pv": 298300.0, "pmt": 6500.0, "frekvens": "kvartal", "arbetsrelaterad": true}, {"namn": "Tidigare LöneVXL+TjP", "pv": 349526.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Lysa (Felipe)", "pv": 211429.0, "pmt": 3750.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "Lysa (Ulrika)", "pv": 154216.0, "pmt": 7620.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "Buffert Lysa (Ulrika)", "pv": 174383.0, "pmt": 8700.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "TjP Kåpan (Felipe)", "pv": 50947.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "TjP Norge — Felipe", "pv": 970000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "DNB (Felipe)", "pv": 212000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Storebrand (Felipe)", "pv": 46000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Storebrand (Ulrika)", "pv": 146313.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "DNB (Ulrika)", "pv": 82702.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}];
+const GRUPPER = {"Privata fonder (Felipe)": ["Lysa (Felipe)"], "Privata fonder (Ulrika)": ["Lysa (Ulrika)", "Buffert Lysa (Ulrika)"], "TjP (Felipe)": ["TjP Kommun (Felipe)", "TjP Kåpan (Felipe)"], "LöneVXL (Felipe)": ["Lönväxling", "Tidigare LöneVXL+TjP"], "TjP (Ulrika)": ["TjP UV Kommun (Ulrika)"], "TjP Norge (Felipe)": ["TjP Norge — Felipe", "DNB (Felipe)", "Storebrand (Felipe)"], "TjP Norge (Ulrika)": ["Storebrand (Ulrika)", "DNB (Ulrika)"]};
+const PENSION = {"norsk_felipe_inntekt": 9406.0, "norsk_felipe_garanti": 5556.0, "norsk_felipe_sum": 14962.0, "norsk_ulrika_inntekt": 9000.0, "norsk_ulrika_garanti": 5000.0, "norsk_ulrika_sum": 14000.0, "svensk_felipe": 18700.0, "svensk_ulrika": 16800.0};
+const AKTIER_NU = 1046858.0000000001;
+const BASE_YEAR  = 2026;   // År då scriptet kördes
+const BASE_MONTH = 7;  // Månad då scriptet kördes (1-12)
+const FONDER_PMT_DEFAULT  = 20070;   // Månadsinsättning fonder (från Excel)
+const LONEVXL_PMT_DEFAULT = 11638;  // Månadsinsättning LöneVXL (från Excel)
+const LYSA_FV_DEFAULT    = 211429;
+const LYSA_UV_DEFAULT    = 154216;
+const BUFFERT_UV_DEFAULT = 174383;
+
+// ── FV-funktion (samma som Excel FV) ─────────────────────────────────────
+function fv(rate, nper, pmt, pv) {
+  if (rate === 0) return -(pv + pmt * nper);
+  return -(pv * Math.pow(1 + rate, nper) + pmt * ((Math.pow(1 + rate, nper) - 1) / rate));
+}
+
+// ── PMT-funktion — månadsuttag från ett kapital under n månader ───────────
+function pmt(rate, nper, pv) {
+  if (rate === 0) return pv / nper;
+  return pv * rate / (1 - Math.pow(1 + rate, -nper));
+}
+
+function fmtKr(v) {
+  if (v === null || isNaN(v)) return '—';
+  return Math.round(v).toLocaleString('sv-SE') + ' kr';
+}
+function fmtMsek(v) {
+  return (v/1e6).toFixed(2) + ' MSEK';
+}
+
+// ── Beräkna FV för ett konto ──────────────────────────────────────────────
+// arAktiva = antal år med insättningar (= år till FIRE för arbetsrelaterade konton)
+// arTotal  = totalt antal år att beräkna (kan vara längre om privat sparande fortsätter)
+function beraknaKonto(k, avkAr, arAktiva, arTotal) {
+  arTotal = arTotal !== undefined ? arTotal : arAktiva;
+  const r_manad   = Math.pow(1 + avkAr/100, 1/12) - 1;
+  const r_kvartal = Math.pow(1 + avkAr/100, 1/4)  - 1;
+
+  // Insättningar sker bara under arAktiva år — resterande tid växer utan insättningar
+  const r     = k.frekvens === 'kvartal' ? r_kvartal : r_manad;
+  const nAkt  = k.frekvens === 'kvartal' ? arAktiva * 4 : arAktiva * 12;
+  const nRest = k.frekvens === 'kvartal' ? (arTotal - arAktiva) * 4 : (arTotal - arAktiva) * 12;
+
+  // Värde efter aktiv insättningsfas
+  const pvVidFireYear = fv(r, nAkt, -k.pmt, -k.pv);
+
+  // Fortsätt växa utan insättningar resten av perioden
+  if (nRest <= 0) return pvVidFireYear;
+  return fv(r, nRest, 0, -pvVidFireYear);
+}
+
+// ── Summera grupper ───────────────────────────────────────────────────────
+function sumGrupp(gruppNamn, fvMap) {
+  return (GRUPPER[gruppNamn] || []).reduce((s, n) => s + (fvMap[n] || 0), 0);
+}
+
+// ── Diagram-instanser ─────────────────────────────────────────────────────
+const DARK_GRID = '#2d3348', DARK_TEXT = '#8892a4';
+const COLORS = ['#4f8ef7','#6ee7b7','#f59e0b','#f87171','#a78bfa','#34d399'];
+// Fasta färger per kategori — konsekvent i alla diagram
+const C_FONDER = '#4f8ef7';  // blå
+const C_AKTIER = '#6ee7b7';  // grön
+const C_TJP    = '#f59e0b';  // orange
+const C_NORGE  = '#f87171';  // röd
+
+let charts = {};
+function makeOrUpdate(id, config) {
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id), config);
+}
+
+// ── Huvudberäkning ────────────────────────────────────────────────────────
+function recalculate() {
+  const avkAr    = parseFloat(document.getElementById('slider-avk').value);
+  const antalAr  = parseInt(document.getElementById('slider-ar').value);
+  const expense    = parseFloat(document.getElementById('input-exp').value) || 65000;
+  const expense2   = parseFloat(document.getElementById('input-exp2').value) || 50000;
+  const expSwitch  = parseInt(document.getElementById('input-exp-switch').value) || 10;
+  const expAtYear  = yr => (yr - fireYear) < expSwitch ? expense : expense2;
+  const norcoAntal  = parseFloat(document.getElementById('input-norco-antal').value) || 0;
+  const norcoKurs   = parseFloat(document.getElementById('input-norco-kurs').value) || 0;
+  const oncopAntal  = parseFloat(document.getElementById('input-oncop-antal').value) || 0;
+  const oncopKurs   = parseFloat(document.getElementById('input-oncop-kurs').value) || 0;
+  const aktierVal   = norcoAntal * norcoKurs + oncopAntal * oncopKurs || AKTIER_NU;
+  const aktierIFire     = document.getElementById('check-aktier-fire').checked;
+  const uttAvkAr = parseFloat(document.getElementById('slider-uttavk').value);
+  const fireYear = Math.round(BASE_YEAR + (BASE_MONTH - 1) / 12 + antalAr);
+  const skattSats  = parseFloat(document.getElementById('slider-skatt').value) || 0;
+  const skattFaktor = 1 - skattSats / 100;
+  document.getElementById('val-skatt').textContent = skattSats;
+  const engBelopp = parseFloat(document.getElementById('input-uttag-belopp').value) || 0;
+  const engAr     = parseInt(document.getElementById('input-uttag-ar').value) || 0;
+  const fonderPmt    = parseFloat(document.getElementById('input-fonder-pmt').value) || 0;
+  const lonevxlPmt   = parseFloat(document.getElementById('input-lonevxl-pmt').value) || 0;
+  const fonderScale  = FONDER_PMT_DEFAULT  > 0 ? fonderPmt  / FONDER_PMT_DEFAULT  : 0;
+  const lonevxlScale = LONEVXL_PMT_DEFAULT > 0 ? lonevxlPmt / LONEVXL_PMT_DEFAULT : 0;
+  const pvOverride = {
+    'Lysa (Felipe)':           parseFloat(document.getElementById('input-lysa-fv').value)     || LYSA_FV_DEFAULT,
+    'Lysa (Ulrika)':           parseFloat(document.getElementById('input-lysa-uv').value)     || LYSA_UV_DEFAULT,
+    'Buffert Lysa (Ulrika)':   parseFloat(document.getElementById('input-buffert-uv').value)  || BUFFERT_UV_DEFAULT,
+    'TjP Kommun (Felipe)':     parseFloat(document.getElementById('input-tjp-f').value)       || 0,
+    'Lönväxling':              parseFloat(document.getElementById('input-lonevxl-pv').value)  || 0,
+    'Tidigare LöneVXL+TjP':   parseFloat(document.getElementById('input-tidligare').value)   || 0,
+    'TjP Kåpan (Felipe)':      parseFloat(document.getElementById('input-kapan').value)       || 0,
+    'TjP UV Kommun (Ulrika)':  parseFloat(document.getElementById('input-tjp-u').value)       || 0,
+  };
+
+  // Premiepension (AP7) — redigerbara via Fondvärden idag, växer med avkastning
+  const ppF = parseFloat(document.getElementById('input-pp-f').value) || 0;
+  const ppU = parseFloat(document.getElementById('input-pp-u').value) || 0;
+  const pp_nu_sum = ppF + ppU;
+  const pp_fv_sum = pp_nu_sum * Math.pow(1 + avkAr/100, antalAr);
+
+  // Inkomstpension + NAV — läses från localStorage (sätts av ekonomi.html)
+  const ap_f_val   = parseFloat(localStorage.getItem('ek_bal_ap_f'))   || 0;
+  const ap_u_val   = parseFloat(localStorage.getItem('ek_bal_ap_u'))   || 0;
+  const nav_f_nok  = parseFloat(localStorage.getItem('ek_bal_nav_f'))  || 0;
+  const nav_u_nok  = parseFloat(localStorage.getItem('ek_bal_nav_u'))  || 0;
+  const nok_sek_rate = parseFloat(localStorage.getItem('ek_bal_nok_sek')) || 0.97;
+  const ap_nu_sum  = ap_f_val + ap_u_val;
+  const nav_nu_sum = (nav_f_nok + nav_u_nok) * nok_sek_rate;
+
+  // Uppdatera labels
+  document.getElementById('val-avk').textContent    = avkAr;
+  document.getElementById('val-ar').textContent     = antalAr;
+  document.getElementById('lbl-ar').textContent     = antalAr;
+  document.getElementById('lbl-ar2').textContent    = antalAr;
+  document.getElementById('lbl-avk').textContent    = avkAr;
+  document.getElementById('val-uttavk').textContent = uttAvkAr;
+
+  // FV per konto — arbetsrelaterade konton slutar ta emot insättningar vid FIRE
+  const FONDER_NAMN   = ['Lysa (Felipe)','Lysa (Ulrika)','Avanza (Ulrika)','Buffert Lysa (Ulrika)'];
+  const LONEVXL_NAMN  = ['Lönväxling'];
+  const fvMap = {};
+  KONTON.forEach(k => {
+    let scale = 1;
+    if (FONDER_NAMN.includes(k.namn))  scale = fonderScale;
+    if (LONEVXL_NAMN.includes(k.namn)) scale = lonevxlScale;
+    const overridePv = pvOverride[k.namn] !== undefined ? pvOverride[k.namn] : k.pv;
+    const kScaled = Object.assign({}, k, { pmt: k.pmt * scale, pv: overridePv });
+    fvMap[k.namn] = beraknaKonto(kScaled, avkAr, antalAr, antalAr);
+  });
+
+  // Dagens värden (pv direkt, med eventuell override)
+  const pvMap = {};
+  KONTON.forEach(k => pvMap[k.namn] = pvOverride[k.namn] !== undefined ? pvOverride[k.namn] : k.pv);
+
+  // ── Synka TjP Norge + Sparkonto från ekonomi.html via localStorage ─────────
+  const norgeSync = {
+    'TjP Norge — Felipe': 'ek_bal_norgef',
+    'DNB (Felipe)':        'ek_bal_dnbf',
+    'Storebrand (Felipe)': 'ek_bal_sbf',
+    'Storebrand (Ulrika)': 'ek_bal_sbu',
+    'DNB (Ulrika)':        'ek_bal_dnbu',
+  };
+  Object.entries(norgeSync).forEach(([namn, key]) => {
+    const v = localStorage.getItem(key);
+    if (v !== null) {
+      pvMap[namn] = parseFloat(v);
+      const k = KONTON.find(kk => kk.namn === namn);
+      if (k) fvMap[namn] = beraknaKonto(Object.assign({}, k, {pv: parseFloat(v)}), avkAr, antalAr, antalAr);
+    }
+  });
+  const sparkonto_val  = parseFloat(localStorage.getItem('ek_bal_sparkonto')) || 0;
+  const sparkonto_pmt  = parseFloat(localStorage.getItem('ek_spar_borgo')) || 2000;
+  const BORGO_RANTA    = parseFloat(document.getElementById('slider-borgo-ranta').value) || 2.3;
+  document.getElementById('val-borgo-ranta').textContent = BORGO_RANTA.toFixed(1);
+  const r_manad_sp     = Math.pow(1 + BORGO_RANTA/100, 1/12) - 1;
+  const sparkonto_fv   = sparkonto_val * Math.pow(1 + BORGO_RANTA/100, antalAr)
+                       + sparkonto_pmt * (Math.pow(1 + r_manad_sp, antalAr*12) - 1) / r_manad_sp;
+
+  // Grupperade FV
+  const grp_fonder_f   = sumGrupp('Privata fonder (Felipe)', fvMap);
+  const grp_fonder_u   = sumGrupp('Privata fonder (Ulrika)', fvMap);
+  const grp_tjp_f      = sumGrupp('TjP (Felipe)',            fvMap);
+  const grp_lonevxl    = sumGrupp('LöneVXL (Felipe)',        fvMap);
+  const grp_tjp_u      = sumGrupp('TjP (Ulrika)',            fvMap);
+  const grp_norge_f    = sumGrupp('TjP Norge (Felipe)',      fvMap);
+  const grp_norge_u    = sumGrupp('TjP Norge (Ulrika)',      fvMap);
+
+  // Justera fonder_fv om engångsuttag sker före FIRE (beloppet + förlorad tillväxt)
+  const engFonderJustering = (engBelopp > 0 && engAr > 0 && engAr < fireYear)
+    ? engBelopp * Math.pow(1 + avkAr/100, fireYear - engAr) : 0;
+  const fonder_fv  = Math.max(0, grp_fonder_f + grp_fonder_u - engFonderJustering);
+  const tjp_fv     = grp_tjp_f + grp_lonevxl + grp_tjp_u;
+  const norge_fv   = grp_norge_f  + grp_norge_u;
+  const totalt_fv  = fonder_fv + tjp_fv + norge_fv + pp_fv_sum + ap_nu_sum + nav_nu_sum + sparkonto_fv;
+
+  // Dagens summor via pvMap
+  const fonder_nu_sum   = sumGrupp('Privata fonder (Felipe)', pvMap) + sumGrupp('Privata fonder (Ulrika)', pvMap);
+  const tjp_f_nu_sum    = sumGrupp('TjP (Felipe)',            pvMap);
+  const lonevxl_nu_sum  = sumGrupp('LöneVXL (Felipe)',        pvMap);
+  const tjp_u_nu_sum    = sumGrupp('TjP (Ulrika)',            pvMap);
+  const norge_nu_sum    = sumGrupp('TjP Norge (Felipe)',      pvMap) + sumGrupp('TjP Norge (Ulrika)', pvMap);
+
+  // KPI-uppdatering
+  document.getElementById('kpi-aktier-nu').textContent   = fmtKr(aktierVal);
+  document.getElementById('kpi-aktier-sub').textContent  =
+    `NORCO ${norcoAntal}×${norcoKurs} · Oncop ${oncopAntal}×${oncopKurs}`;
+  document.getElementById('kpi-fonder-nu').textContent   = fmtKr(fonder_nu_sum);
+  document.getElementById('kpi-tjp-f-nu').textContent    = fmtKr(tjp_f_nu_sum);
+  document.getElementById('kpi-lonevxl-nu').textContent  = fmtKr(lonevxl_nu_sum);
+  document.getElementById('kpi-tjp-u-nu').textContent    = fmtKr(tjp_u_nu_sum);
+  const nu_tot = fonder_nu_sum + aktierVal + tjp_f_nu_sum + lonevxl_nu_sum + tjp_u_nu_sum + norge_nu_sum + pp_nu_sum + ap_nu_sum + nav_nu_sum + sparkonto_val;
+  document.getElementById('kpi-nu-tot').textContent  = '= ' + fmtKr(nu_tot);
+  document.getElementById('kpi-norge-nu').textContent    = fmtKr(norge_nu_sum);
+  document.getElementById('kpi-pp-nu').textContent      = fmtKr(pp_nu_sum);
+  document.getElementById('kpi-ap-nu').textContent      = fmtKr(ap_nu_sum);
+  document.getElementById('kpi-nav-nu').textContent     = fmtKr(nav_nu_sum);
+  document.getElementById('kpi-borgo-nu').textContent   = fmtKr(sparkonto_val);
+  document.getElementById('kpi-fonder-fv').textContent   = fmtKr(fonder_fv);
+  document.getElementById('kpi-tjp-f-fv').textContent    = fmtKr(grp_tjp_f);
+  document.getElementById('kpi-lonevxl-fv').textContent  = fmtKr(grp_lonevxl);
+  document.getElementById('kpi-tjp-u-fv').textContent    = fmtKr(grp_tjp_u);
+  document.getElementById('kpi-norge-fv').textContent    = fmtKr(norge_fv);
+  document.getElementById('kpi-pp-fv').textContent      = fmtKr(pp_fv_sum);
+  document.getElementById('kpi-ap-fv').textContent      = fmtKr(ap_nu_sum);
+  document.getElementById('kpi-nav-fv').textContent     = fmtKr(nav_nu_sum);
+  document.getElementById('kpi-borgo-fv').textContent   = fmtKr(sparkonto_fv);
+  document.getElementById('kpi-borgo-fv-sub').textContent = BORGO_RANTA.toFixed(1) + '% ränta + ' + Math.round(sparkonto_pmt).toLocaleString('sv-SE') + ' kr/mån';
+  document.getElementById('kpi-aktier-fv').textContent = fmtKr(aktierVal);
+  document.getElementById('kpi-totalt-fv').textContent = fmtKr(totalt_fv + aktierVal);
+  document.getElementById('kpi-fv-tot').textContent = '= ' + fmtKr(totalt_fv + aktierVal);
+
+  const tjp_nu_sum = tjp_f_nu_sum + lonevxl_nu_sum + tjp_u_nu_sum;
+
+  // ── Pie idag ────────────────────────────────────────────────────────────
+  const PIE_LABELS_NU = ['Privata fonder','Aktier','TjP Felipe','LöneVXL Felipe','TjP Ulrika','TjP Norge','Premiepension (AP7)','Inkomstpension SE','NAV (NO)'];
+  const PIE_COLORS   = [C_FONDER,C_AKTIER,C_TJP,'#a78bfa','#34d399',C_NORGE,'#60a5fa','#22d3ee','#06b6d4'];
+  makeOrUpdate('pieNu', {
+    type:'doughnut',
+    data:{
+      labels: PIE_LABELS_NU,
+      datasets:[{ data:[fonder_nu_sum,AKTIER_NU,tjp_f_nu_sum,lonevxl_nu_sum,tjp_u_nu_sum,norge_nu_sum,pp_nu_sum,ap_nu_sum,nav_nu_sum], backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'#1a1d27' }]
+    },
+    options:{ plugins:{ legend:{ labels:{ color:'#e2e8f0', boxWidth:12 } } }, cutout:'60%' }
+  });
+
+  // ── Pie FV ──────────────────────────────────────────────────────────────
+  makeOrUpdate('pieFv', {
+    type:'doughnut',
+    data:{
+      labels:['Privata fonder','Aktier (dagsvärde)','TjP Felipe','LöneVXL Felipe','TjP Ulrika','TjP Norge','Premiepension (AP7)','Inkomstpension SE','NAV (NO)'],
+      datasets:[{ data:[fonder_fv,aktierVal,grp_tjp_f,grp_lonevxl,grp_tjp_u,norge_fv,pp_fv_sum,ap_nu_sum,nav_nu_sum], backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'#1a1d27' }]
+    },
+    options:{ plugins:{ legend:{ labels:{ color:'#e2e8f0', boxWidth:12 } } }, cutout:'60%' }
+  });
+
+  // ── Tillväxtdiagram ─────────────────────────────────────────────────────
+  const years = Array.from({length: antalAr+1}, (_,i) => BASE_YEAR+i);
+  const g_fonder = years.map((_,i) => Math.round(
+    KONTON.filter(k=>FONDER_NAMN.includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(Object.assign({},k,{pmt:k.pmt*fonderScale}), avkAr, i), 0)
+  ));
+  const g_lonevxl = years.map((_,i) => Math.round(
+    KONTON.filter(k=>['Lönväxling','Tidigare LöneVXL+TjP'].includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(
+        LONEVXL_NAMN.includes(k.namn) ? Object.assign({},k,{pmt:k.pmt*lonevxlScale}) : k,
+        avkAr, i), 0)
+  ));
+  const g_tjp_f = years.map((_,i) => Math.round(
+    KONTON.filter(k=>['TjP Kommun (Felipe)','TjP Kåpan (Felipe)'].includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(k, avkAr, i), 0)
+  ));
+  const g_tjp_u = years.map((_,i) => Math.round(
+    KONTON.filter(k=>['TjP UV Kommun (Ulrika)'].includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(k, avkAr, i), 0)
+  ));
+  const g_norge = years.map((_,i) => Math.round(
+    KONTON.filter(k=>['TjP Norge — Felipe','DNB (Felipe)','Storebrand (Felipe)','Storebrand (Ulrika)','DNB (Ulrika)'].includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(k, avkAr, i), 0)
+  ));
+
+  makeOrUpdate('lineChart', {
+    type:'bar',
+    data:{
+      labels: years,
+      datasets:[
+        { label:'Privata fonder',    data:g_fonder,   backgroundColor:C_FONDER+'b3', stack:'s' },
+        { label:'Aktier (dagsvärde)',data:years.map(()=>aktierVal), backgroundColor:C_AKTIER+'b3', stack:'s' },
+        { label:'LöneVXL Felipe',   data:g_lonevxl,  backgroundColor:'#a78bfab3',   stack:'s' },
+        { label:'TjP Felipe',       data:g_tjp_f,    backgroundColor:C_TJP+'b3',    stack:'s' },
+        { label:'TjP Ulrika',       data:g_tjp_u,    backgroundColor:'#34d399b3',   stack:'s' },
+        { label:'TjP Norge',        data:g_norge,    backgroundColor:C_NORGE+'b3',  stack:'s' },
+      ]
+    },
+    options:{
+      scales:{
+        x:{ ticks:{ color:DARK_TEXT }, grid:{ color:DARK_GRID } },
+        y:{ ticks:{ color:DARK_TEXT, callback:v=>(v/1e6).toFixed(1)+' MSEK' }, grid:{ color:DARK_GRID }, stacked:true }
+      },
+      plugins:{
+        legend:{ labels:{ color:'#e2e8f0' } },
+        tooltip:{ callbacks:{ label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString('sv-SE')+' kr' } }
+      }
+    }
+  });
+
+  // ── Pensionsinkomster per fas — fasta kalenderår baserat på ålder ────────
+  // Felipe född 1975 (51 år 2026), Ulrika född 1970 (56 år 2026)
+  const FELIPE_FODELSEAR = 1975;
+  const ULRIKA_FODELSEAR = 1970;
+
+  const uttAvkManad      = uttAvkAr / 100 / 12;
+  const tjpAr            = parseInt(document.getElementById('slider-tjp-ar').value) || 20;
+  const fTjpAlder        = parseInt(document.getElementById('slider-f-tjp-alder').value) || 65;
+  const fNorskTjpAlder   = parseInt(document.getElementById('slider-f-norsk-tjp-alder').value) || 62;
+  const uTjpAlder        = parseInt(document.getElementById('slider-u-tjp-alder').value) || 62;
+  const YR_F_NORSK_TJP  = Math.max(fireYear, FELIPE_FODELSEAR + fNorskTjpAlder);
+  const YR_U_NORSK_TJP  = ULRIKA_FODELSEAR + 62;   // fast (62 år)
+  const fAllmanAlder     = parseInt(document.getElementById('slider-f-allman-alder').value) || 67;
+  const uAllmanAlder     = parseInt(document.getElementById('slider-u-allman-alder').value) || 68;
+  document.getElementById('val-tjp-ar').textContent              = tjpAr;
+  document.getElementById('val-f-tjp-alder').textContent         = fTjpAlder;
+  document.getElementById('val-f-norsk-tjp-alder').textContent   = fNorskTjpAlder;
+  document.getElementById('val-u-tjp-alder').textContent         = uTjpAlder;
+  document.getElementById('val-f-allman-alder').textContent = fAllmanAlder;
+  document.getElementById('val-u-allman-alder').textContent = uAllmanAlder;
+
+  // Norsk TjP — egna kontovärden, utbetalas från 62 t.o.m. 77 (15 år)
+  // Kapitalet växer från FIRE till 62 utan uttag, sedan PMT över 15 år
+  const NORSK_TJP_PERIOD = 15;  // alltid till 77 (62 + 15)
+  const f_norsk_extra_ar  = Math.max(0, YR_F_NORSK_TJP - fireYear);
+  const f_norsk_vid_uttag = grp_norge_f * Math.pow(1 + avkAr/100, f_norsk_extra_ar);
+  const f_norsk_tjp       = Math.round(pmt(uttAvkManad, NORSK_TJP_PERIOD * 12, f_norsk_vid_uttag));
+
+  const u_norsk_extra_ar  = Math.max(0, YR_U_NORSK_TJP - fireYear);
+  const u_norsk_vid_uttag = grp_norge_u * Math.pow(1 + avkAr/100, u_norsk_extra_ar);
+  const u_norsk_tjp       = Math.round(pmt(uttAvkManad, NORSK_TJP_PERIOD * 12, u_norsk_vid_uttag));
+
+  const f_norsk_tjp_slut_yr = FELIPE_FODELSEAR + 77;   // 2052
+  const u_norsk_tjp_slut_yr = ULRIKA_FODELSEAR + 77;   // 2047
+
+  // Svensk TjP — startår styrs av sliders, minst 62 år och minst vid FIRE
+  // Felipe
+  const f_tjp_start_yr = Math.max(fireYear, FELIPE_FODELSEAR + fTjpAlder);
+  const f_tjp_extra_ar = Math.max(0, f_tjp_start_yr - fireYear);
+  const f_tjp_vid_uttag = grp_tjp_f * Math.pow(1 + avkAr/100, f_tjp_extra_ar);
+  const f_svensk_tjp = Math.round(pmt(uttAvkManad, tjpAr * 12, f_tjp_vid_uttag));
+
+  // Ulrika
+  const u_tjp_start_yr = Math.max(fireYear, ULRIKA_FODELSEAR + uTjpAlder);
+  const u_tjp_extra_ar = Math.max(0, u_tjp_start_yr - fireYear);
+  const u_tjp_vid_uttag = grp_tjp_u * Math.pow(1 + avkAr/100, u_tjp_extra_ar);
+  const u_svensk_tjp = Math.round(pmt(uttAvkManad, tjpAr * 12, u_tjp_vid_uttag));
+
+  // Sluttider för TjP (används i pensionVidAr och fasData)
+  const f_tjp_slut_yr = f_tjp_start_yr + tjpAr;
+  const u_tjp_slut_yr = u_tjp_start_yr + tjpAr;
+
+  const u_allman_sv  = PENSION.svensk_ulrika;
+  const u_allman_no  = PENSION.norsk_ulrika_sum;
+  const f_allman     = PENSION.svensk_felipe;
+
+  // Förbestämt TjP Felipe — fast livslångt belopp fr.o.m. 65 år
+  // KPA (334) + Alecta (1 637) + Kåpan (382) = 2 353 kr/mån
+  const F_FAST_TJP      = 2353;
+  const YR_F_FAST_TJP   = FELIPE_FODELSEAR + 65;  // 2040
+
+  // Fasta år för alla pensionshändelser (från sliders)
+  const YR_U_ALLMAN    = ULRIKA_FODELSEAR + uAllmanAlder;
+  const YR_F_ALLMAN_SE = FELIPE_FODELSEAR + fAllmanAlder;
+
+  // Alla möjliga pensionshändelser med sina startår
+  // Hjälpfunktion — visar faktisk ålder vid uttag (aldrig lägre än planerad ålder)
+  function actualAge(plannedYr, birthYr) {
+    return Math.max(plannedYr, fireYear) - birthYr;
+  }
+
+  const alleHändelser = [
+    { yr: YR_U_NORSK_TJP,       who:'u', typ:'norsk_tjp',        label:`Ulrika 62: Norsk TjP startar (t.o.m. 77)` },
+    { yr: u_norsk_tjp_slut_yr,  who:'u', typ:'norsk_tjp_slut',   label:`Ulrika 77: Norsk TjP slutar` },
+    { yr: u_tjp_start_yr,       who:'u', typ:'svensk_tjp',       label:`Ulrika ${actualAge(u_tjp_start_yr, ULRIKA_FODELSEAR)}: Svensk TjP Kommun startar (${tjpAr} år)` },
+    { yr: u_tjp_slut_yr,        who:'u', typ:'svensk_tjp_slut',  label:`Ulrika ${u_tjp_slut_yr - ULRIKA_FODELSEAR}: Svensk TjP Kommun slutar` },
+    { yr: YR_F_NORSK_TJP,       who:'f', typ:'norsk_tjp',        label:`Felipe ${fNorskTjpAlder}: Norsk TjP startar (t.o.m. 77)` },
+    { yr: f_norsk_tjp_slut_yr,  who:'f', typ:'norsk_tjp_slut',   label:`Felipe 77: Norsk TjP slutar` },
+    { yr: f_tjp_start_yr,       who:'f', typ:'svensk_tjp',       label:`Felipe ${actualAge(f_tjp_start_yr, FELIPE_FODELSEAR)}: Svensk TjP Kommun startar (${tjpAr} år)` },
+    { yr: f_tjp_slut_yr,        who:'f', typ:'svensk_tjp_slut',  label:`Felipe ${f_tjp_slut_yr - FELIPE_FODELSEAR}: Svensk TjP Kommun slutar` },
+    { yr: YR_F_FAST_TJP,        who:'f', typ:'fast_tjp',         label:`Felipe 65: Förbestämt TjP (Alecta/KPA/Kåpan)` },
+    { yr: YR_U_ALLMAN,          who:'u', typ:'allman',           label:`Ulrika ${uAllmanAlder}: Allmänpension SE+NO` },
+    { yr: YR_F_ALLMAN_SE,       who:'f', typ:'allman',           label:`Felipe ${fAllmanAlder}: Allmänpension Sverige + Norge` },
+  ];
+
+  // Fas 1 — FIRE-dag: visa vad som redan är aktivt + vad som startar samma år
+  const aktiva_vid_fire = alleHändelser.filter(h => h.yr <= fireYear);
+  const fas1Events = ['FIRE-dag — privata fonder täcker gapet'];
+  aktiva_vid_fire.forEach(h => fas1Events.push(h.label + ' (redan aktiv)'));
+
+  // Framtida faser — händelser efter FIRE, grupperade per år
+  const framtida = alleHändelser.filter(h => h.yr > fireYear);
+  framtida.sort((a, b) => a.yr - b.yr);
+  const framtidaMap = {};
+  framtida.forEach(h => {
+    if (!framtidaMap[h.yr]) framtidaMap[h.yr] = [];
+    framtidaMap[h.yr].push(h.label);
+  });
+
+  // Bygg fasData — Fas 1 + framtida faser
+  // Beräkna ackumulerad inkomst per fas
+  const fasData = [];
+  // Fas 1 — beräkna Felipe och Ulrika separat från faktiska komponenter
+  const fas1_fF = ((fireYear >= YR_F_NORSK_TJP && fireYear < f_norsk_tjp_slut_yr ? f_norsk_tjp : 0)
+                + (fireYear >= f_tjp_start_yr && fireYear < f_tjp_slut_yr ? f_svensk_tjp : 0)
+                + (fireYear >= YR_F_FAST_TJP ? F_FAST_TJP : 0)
+                + (fireYear >= YR_F_ALLMAN_SE ? f_allman + PENSION.norsk_felipe_sum : 0)) * skattFaktor;
+  const fas1_fU = ((fireYear >= YR_U_NORSK_TJP && fireYear < u_norsk_tjp_slut_yr ? u_norsk_tjp : 0)
+                + (fireYear >= u_tjp_start_yr && fireYear < u_tjp_slut_yr ? u_svensk_tjp : 0)
+                + (fireYear >= YR_U_ALLMAN ? u_allman_sv + u_allman_no : 0)) * skattFaktor;
+
+  fasData.push({
+    nr: '1', yr: fireYear,
+    ageF: fireYear - FELIPE_FODELSEAR,
+    ageU: fireYear - ULRIKA_FODELSEAR,
+    events: fas1Events,
+    f: Math.round(fas1_fF),
+    u: Math.round(fas1_fU),
+  });
+
+  Object.keys(framtidaMap).sort().forEach((yr, i) => {
+    const y = parseInt(yr);
+    const tot = pensionVidAr(y);
+    fasData.push({
+      nr: String(i + 2), yr: y,
+      ageF: y - FELIPE_FODELSEAR,
+      ageU: y - ULRIKA_FODELSEAR,
+      events: framtidaMap[yr],
+      f: 0, u: 0,  // beräknas nedan
+      _yr: y,
+    });
+  });
+
+  // Beräkna Felipe/Ulrika-split per fas via pensionVidAr
+  fasData.forEach(fas => {
+    if (fas._yr) {
+      const fTot  = (pensionVidAr(fas._yr + 0.1) - pensionVidAr(fas._yr - 0.1));
+      // Enklare: beräkna direkt från komponenter
+      const fF = ((fas._yr >= YR_F_NORSK_TJP && fas._yr < f_norsk_tjp_slut_yr ? f_norsk_tjp : 0)
+               + (fas._yr >= f_tjp_start_yr && fas._yr < f_tjp_slut_yr ? f_svensk_tjp : 0)
+               + (fas._yr >= YR_F_FAST_TJP ? F_FAST_TJP : 0)
+               + (fas._yr >= YR_F_ALLMAN_SE ? f_allman + PENSION.norsk_felipe_sum : 0)) * skattFaktor;
+      const fU = ((fas._yr >= YR_U_NORSK_TJP && fas._yr < u_norsk_tjp_slut_yr ? u_norsk_tjp : 0)
+               + (fas._yr >= u_tjp_start_yr && fas._yr < u_tjp_slut_yr ? u_svensk_tjp : 0)
+               + (fas._yr >= YR_U_ALLMAN ? u_allman_sv + u_allman_no : 0)) * skattFaktor;
+      fas.f = Math.round(fF);
+      fas.u = Math.round(fU);
+    }
+  });
+  const badges = ['badge-blue','badge-green','badge-amber','badge-red','badge-red','badge-red','badge-red'];
+  const tbody = document.getElementById('fire-tbody');
+  tbody.innerHTML = fasData.map((f,i) => {
+    const tot    = f.f + f.u;
+    const gap    = Math.max(0, expAtYear(f.yr) - tot);
+    const gapTxt = gap > 0
+      ? `<span class="neg">~${fmtKr(gap)}</span>`
+      : `<span class="pos">Självfinansierade</span>`;
+    const fireTag = f.yr === fireYear ? ' <span class="badge badge-blue">FIRE</span>' : '';
+    return `<tr>
+      <td><span class="badge ${badges[i]}">${f.nr}</span>${fireTag}</td>
+      <td>${f.yr}</td>
+      <td>F:${f.ageF} / U:${f.ageU}</td>
+      <td>${(f.events || [f.event]).map(e => `<div>${e}</div>`).join('')}</td>
+      <td class="num pos">${fmtKr(f.f)}</td>
+      <td class="num pos">${fmtKr(f.u)}</td>
+      <td class="num pos">${fmtKr(tot)}</td>
+      <td class="num">${gapTxt}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Uttaksdiagram ────────────────────────────────────────────────────────
+  const uttMonthly = uttAvkManad;
+
+  // Beräkna pensionsinkomst per år — tar hänsyn till alla start- och sluttider
+  function pensionVidAr(yr) {
+    let tot = 0;
+    // Norsk TjP — från 62 t.o.m. 77
+    if (yr >= YR_U_NORSK_TJP && yr < u_norsk_tjp_slut_yr) tot += u_norsk_tjp;
+    if (yr >= YR_F_NORSK_TJP && yr < f_norsk_tjp_slut_yr) tot += f_norsk_tjp;
+    // Svensk TjP Kommun — tidsbegränsad
+    if (yr >= u_tjp_start_yr && yr < u_tjp_slut_yr) tot += u_svensk_tjp;
+    if (yr >= f_tjp_start_yr && yr < f_tjp_slut_yr) tot += f_svensk_tjp;
+    // Förbestämt TjP Felipe — livslångt från 65
+    if (yr >= YR_F_FAST_TJP) tot += F_FAST_TJP;
+    // Allmänpension — livslång
+    if (yr >= YR_U_ALLMAN) tot += u_allman_sv + u_allman_no;
+    if (yr >= YR_F_ALLMAN_SE) tot += f_allman + PENSION.norsk_felipe_sum;
+    return tot * skattFaktor;
+  }
+
+  // ── Uttaksdiagram — startkapital (fonder_fv redan justerat för pre-FIRE uttag) ──
+  const fireKapital = fonder_fv + (aktierIFire ? aktierVal : 0);
+  const uttYears=[], uttBalance=[], uttPension=[], uttFonder=[];
+  let balance = Math.max(0, fireKapital);
+
+  for (let yr = fireYear; yr <= fireYear+40; yr++) {
+    // Engångsuttag efter FIRE — dras från balansen det aktuella året
+    if (engBelopp > 0 && engAr === yr) balance = Math.max(0, balance - engBelopp);
+    const curPension = pensionVidAr(yr);
+    const gap = Math.max(0, expAtYear(yr) - curPension);
+    for (let m=0; m<12; m++) {
+      balance = balance*(1+uttMonthly) - gap;
+      if (balance < 0) balance = 0;
+    }
+    uttYears.push(yr);
+    uttBalance.push(Math.round(balance));
+    uttPension.push(Math.round(curPension));
+    uttFonder.push(Math.round(gap));
+    if (balance === 0) break;
+  }
+
+  const fonderDel = fireKapital - (aktierIFire ? aktierVal : 0);
+  const aktierNote = aktierIFire ? ` varav fonder ${fmtKr(fonderDel)} + aktier ${fmtKr(aktierVal)}` : ` fonder ${fmtKr(fonderDel)}`;
+  const engNote = engBelopp > 0 && engAr > 0 ? ` · Engångsuttag ${fmtKr(engBelopp)} år ${engAr}` : '';
+  document.getElementById('uttag-desc').textContent =
+    `Startkapital ${fmtKr(fireKapital)} vid FIRE ${fireYear} (${aktierNote.trim()}) · Period 1 ${fmtKr(expense)}/mån (${expSwitch} år) · Period 2 ${fmtKr(expense2)}/mån · ${uttAvkAr}% avkastning under uttag${engNote}`;
+
+  // ── Breakeven — hitta minsta antal år så fonderna håller till självfinansieringsåret ──
+  // Självfinansieringsåret = när pensionsinkomst >= levnadskostnad
+  const selfYear = fasData.find(f => (f.f + f.u) >= expAtYear(f.yr))?.yr || YR_F_ALLMAN_SE;
+
+  function simBalance(nAr) {
+    const fy = BASE_YEAR + nAr;
+    const fondFv = KONTON.filter(k => ['Lysa (Felipe)','Lysa (Ulrika)',
+      'Avanza (Ulrika)','Buffert Lysa (Ulrika)','Lönväxling','Tidigare LöneVXL+TjP'].includes(k.namn))
+      .reduce((s,k) => s + beraknaKonto(k, avkAr, nAr, nAr), 0);
+    // Justera för engångsuttag före detta FIRE-år
+    const engJust = (engBelopp > 0 && engAr > 0 && engAr < fy)
+      ? engBelopp * Math.pow(1 + avkAr/100, fy - engAr) : 0;
+    const startKapital = Math.max(0, fondFv + (aktierIFire ? aktierVal : 0) - engJust);
+
+    let bal = startKapital;
+    for (let yr = fy; yr <= selfYear + 1; yr++) {
+      if (engBelopp > 0 && engAr === yr) bal = Math.max(0, bal - engBelopp);
+      const curPens = pensionVidAr(yr);
+      const curExpSim = (yr - fy) < expSwitch ? expense : expense2;
+      const gap = Math.max(0, curExpSim - curPens);
+      for (let m = 0; m < 12; m++) {
+        bal = bal * (1 + uttMonthly) - gap;
+        if (bal < 0) return { ok: false, marginal: bal, fondVid: fondFv };
+      }
+    }
+    return { ok: true, marginal: bal, fondVid: fondFv };
+  }
+
+  let beYear = null, beMarginal = 0, beFond = 0;
+  for (let n = 1; n <= 25; n++) {
+    const res = simBalance(n);
+    if (res.ok) { beYear = BASE_YEAR + n; beMarginal = res.marginal; beFond = res.fondVid; break; }
+  }
+
+  const box = document.getElementById('breakeven-box');
+  const txt = document.getElementById('breakeven-text');
+  const sub = document.getElementById('breakeven-sub');
+
+  if (beYear) {
+    const beAr = beYear - BASE_YEAR;
+    txt.textContent = `${beAr} år — FIRE ${beYear} (Felipe ${beYear - 1975} / Ulrika ${beYear - 1970})`;
+    sub.textContent = `Fonderna täcker gapet fram till ${selfYear} med ${fmtKr(beMarginal)} i marginal · Fonder vid FIRE: ${fmtKr(beFond)}`;
+    box.style.borderColor = antalAr >= beAr ? 'var(--accent2)' : 'var(--accent4)';
+    txt.style.color = antalAr >= beAr ? 'var(--accent2)' : 'var(--accent4)';
+    // Visa varning om vald horisont är kortare än breakeven
+    if (antalAr < beAr) {
+      sub.textContent = `⚠ Vald horisont (${antalAr} år) är för kort — fonderna tar slut före ${selfYear}. Behöver minst ${beAr} år. · ${sub.textContent.replace('⚠ ','')}`;
+    }
+  } else {
+    txt.textContent = 'Kan ej beräknas — öka avkastning eller minska levnadskostnad';
+    box.style.borderColor = 'var(--accent4)';
+    txt.style.color = 'var(--accent4)';
+  }
+
+  makeOrUpdate('uttakChart', {
+    type:'line',
+    data:{
+      labels: uttYears,
+      datasets:[
+        { label:'Fondbalans', data:uttBalance, borderColor:'#4f8ef7', backgroundColor:'rgba(79,142,247,0.12)', fill:true, tension:0.3, pointRadius:3, yAxisID:'y' },
+        { label:'Uttag från fonder/mån', data:uttFonder, borderColor:'#f87171', fill:false, tension:0.3, borderDash:[5,4], pointRadius:3, yAxisID:'y2' },
+        { label:'Pensionsinkomst/mån', data:uttPension, borderColor:'#6ee7b7', fill:false, tension:0, stepped:true, pointRadius:3, yAxisID:'y2' },
+      ]
+    },
+    options:{
+      interaction:{ mode:'index', intersect:false },
+      scales:{
+        x:{ ticks:{ color:DARK_TEXT }, grid:{ color:DARK_GRID } },
+        y:{ position:'left', ticks:{ color:DARK_TEXT, callback:v=>(v/1e6).toFixed(1)+' MSEK' }, grid:{ color:DARK_GRID }, title:{ display:true, text:'Fondbalans', color:'#4f8ef7' } },
+        y2:{ position:'right', ticks:{ color:DARK_TEXT, callback:v=>(v/1000).toFixed(0)+' kkr' }, grid:{ drawOnChartArea:false }, title:{ display:true, text:'Kr/mån', color:'#6ee7b7' } }
+      },
+      plugins:{
+        legend:{ labels:{ color:'#e2e8f0' } },
+        tooltip:{ callbacks:{ label:ctx => ctx.datasetIndex===0
+          ? ' Fondbalans: '+(ctx.parsed.y/1e6).toFixed(2)+' MSEK'
+          : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString('sv-SE')+' kr'
+        } }
+      }
+    }
+  });
+
+  // ── Individdiagram ────────────────────────────────────────────────────────
+  function pensionFelipeVidAr(yr) {
+    let tot = 0;
+    if (yr >= YR_F_NORSK_TJP && yr < f_norsk_tjp_slut_yr) tot += f_norsk_tjp;
+    if (yr >= f_tjp_start_yr && yr < f_tjp_slut_yr) tot += f_svensk_tjp;
+    if (yr >= YR_F_FAST_TJP) tot += F_FAST_TJP;
+    if (yr >= YR_F_ALLMAN_SE) tot += f_allman + PENSION.norsk_felipe_sum;
+    return tot * skattFaktor;
+  }
+  function pensionUlrikaVidAr(yr) {
+    let tot = 0;
+    if (yr >= YR_U_NORSK_TJP && yr < u_norsk_tjp_slut_yr) tot += u_norsk_tjp;
+    if (yr >= u_tjp_start_yr && yr < u_tjp_slut_yr) tot += u_svensk_tjp;
+    if (yr >= YR_U_ALLMAN) tot += u_allman_sv + u_allman_no;
+    return tot * skattFaktor;
+  }
+
+  function simIndivid(startFonder, pensionFn, halfExpense, halfExpense2, chartId, descId, color) {
+    const aktierDel = aktierIFire ? aktierVal / 2 : 0;
+    const startKap  = Math.max(0, startFonder + aktierDel);
+    const yrs=[], bals=[], pensions=[], uttag=[];
+    let bal = startKap;
+    for (let yr = fireYear; yr <= fireYear + 40; yr++) {
+      const curPens = pensionFn(yr);
+      const curHalfExp = (yr - fireYear) < expSwitch ? halfExpense : halfExpense2;
+      const gap = Math.max(0, curHalfExp - curPens);
+      for (let m = 0; m < 12; m++) {
+        bal = bal * (1 + uttMonthly) - gap;
+        if (bal < 0) bal = 0;
+      }
+      yrs.push(yr);
+      bals.push(Math.round(bal));
+      pensions.push(Math.round(curPens));
+      uttag.push(Math.round(gap));
+      if (bal === 0) break;
+    }
+    document.getElementById(descId).textContent =
+      `Startkapital ${fmtKr(startKap)} · Period 1 ${fmtKr(halfExpense)}/mån (${expSwitch} år) · Period 2 ${fmtKr(halfExpense2)}/mån · ${uttAvkAr}% avkastning`;
+    makeOrUpdate(chartId, {
+      type:'line',
+      data:{ labels:yrs, datasets:[
+        { label:'Fondbalans', data:bals, borderColor:color, backgroundColor:color.replace('1)','0.12)'), fill:true, tension:0.3, pointRadius:3, yAxisID:'y' },
+        { label:'Uttag från fonder/mån', data:uttag, borderColor:'#f87171', fill:false, tension:0.3, borderDash:[5,4], pointRadius:3, yAxisID:'y2' },
+        { label:'Pensionsinkomst/mån', data:pensions, borderColor:'#6ee7b7', fill:false, tension:0, stepped:true, pointRadius:3, yAxisID:'y2' },
+      ]},
+      options:{
+        interaction:{ mode:'index', intersect:false },
+        scales:{
+          x:{ ticks:{ color:DARK_TEXT }, grid:{ color:DARK_GRID } },
+          y:{ position:'left', ticks:{ color:DARK_TEXT, callback:v=>(v/1e6).toFixed(1)+' MSEK' }, grid:{ color:DARK_GRID }, title:{ display:true, text:'Fondbalans', color:color } },
+          y2:{ position:'right', ticks:{ color:DARK_TEXT, callback:v=>(v/1000).toFixed(0)+' kkr' }, grid:{ drawOnChartArea:false }, title:{ display:true, text:'Kr/mån', color:'#6ee7b7' } }
+        },
+        plugins:{
+          legend:{ labels:{ color:'#e2e8f0' } },
+          tooltip:{ callbacks:{ label:ctx => ctx.datasetIndex===0
+            ? ' Fondbalans: '+(ctx.parsed.y/1e6).toFixed(2)+' MSEK'
+            : ' '+ctx.dataset.label+': '+ctx.parsed.y.toLocaleString('sv-SE')+' kr'
+          } }
+        }
+      }
+    });
+  }
+
+  const expF  = parseFloat(document.getElementById('input-exp-f').value) || expense / 2;
+  const expU  = parseFloat(document.getElementById('input-exp-u').value) || expense / 2;
+  const expF2 = expense2 * expF / (expF + expU || 1);
+  const expU2 = expense2 * expU / (expF + expU || 1);
+  const buffertFv = fvMap['Buffert Lysa (Ulrika)'] || 0;
+  simIndivid(grp_fonder_f + buffertFv / 2, pensionFelipeVidAr, expF, expF2, 'uttakChartF', 'uttag-desc-f', 'rgba(79,142,247,1)');
+  simIndivid(grp_fonder_u - buffertFv / 2, pensionUlrikaVidAr, expU, expU2, 'uttakChartU', 'uttag-desc-u', 'rgba(167,139,250,1)');
+}
+
+// ── Event-lyssnare ────────────────────────────────────────────────────────
+['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta'].forEach(id =>
+  document.getElementById(id).addEventListener('input', recalculate)
+);
+document.getElementById('input-exp').addEventListener('input', recalculate);
+document.getElementById('input-exp2').addEventListener('input', recalculate);
+document.getElementById('input-exp-switch').addEventListener('input', recalculate);
+document.getElementById('input-exp-f').addEventListener('input', recalculate);
+document.getElementById('input-exp-u').addEventListener('input', recalculate);
+document.getElementById('input-norco-antal').addEventListener('input', recalculate);
+document.getElementById('input-norco-kurs').addEventListener('input', recalculate);
+document.getElementById('input-oncop-antal').addEventListener('input', recalculate);
+document.getElementById('input-oncop-kurs').addEventListener('input', recalculate);
+document.getElementById('check-aktier-fire').addEventListener('change', recalculate);
+document.getElementById('input-uttag-belopp').addEventListener('input', recalculate);
+document.getElementById('input-uttag-ar').addEventListener('input', recalculate);
+document.getElementById('input-fonder-pmt').addEventListener('input', recalculate);
+document.getElementById('input-lonevxl-pmt').addEventListener('input', recalculate);
+document.getElementById('input-lysa-fv').addEventListener('input', recalculate);
+document.getElementById('input-lysa-uv').addEventListener('input', recalculate);
+document.getElementById('input-buffert-uv').addEventListener('input', recalculate);
+document.getElementById('input-tjp-f').addEventListener('input', recalculate);
+document.getElementById('input-lonevxl-pv').addEventListener('input', recalculate);
+document.getElementById('input-tidligare').addEventListener('input', recalculate);
+document.getElementById('input-kapan').addEventListener('input', recalculate);
+document.getElementById('input-tjp-u').addEventListener('input', recalculate);
+document.getElementById('input-pp-f').addEventListener('input', recalculate);
+document.getElementById('input-pp-u').addEventListener('input', recalculate);
+
+// ── Synka fondvärden med ekonomi.html via localStorage ───────────────────────
+const EK_SYNC = [
+  ['input-lysa-fv',    'ek_bal_lysaf'],
+  ['input-lysa-uv',    'ek_bal_lysau'],
+  ['input-buffert-uv', 'ek_bal_buffert'],
+  ['input-tjp-f',      'ek_bal_tjpf'],
+  ['input-lonevxl-pv', 'ek_bal_lonevxl'],
+  ['input-tidligare',  'ek_bal_tidligare'],
+  ['input-kapan',      'ek_bal_kapan'],
+  ['input-tjp-u',      'ek_bal_tjpu'],
+  ['input-fonder-pmt',  'ek_spar_total'],
+  ['input-norco-antal', 'ek_bal_norco_antal'],
+  ['input-norco-kurs',  'ek_bal_norco_kurs'],
+  ['input-oncop-antal', 'ek_bal_oncop_antal'],
+  ['input-oncop-kurs',  'ek_bal_oncop_kurs'],
+  ['input-pp-f',        'ek_bal_pp_f'],
+  ['input-pp-u',        'ek_bal_pp_u'],
+];
+EK_SYNC.forEach(([id, ekKey]) => {
+  const stored = localStorage.getItem(ekKey);
+  if (stored !== null) document.getElementById(id).value = stored;
+  document.getElementById(id).addEventListener('input', () => {
+    localStorage.setItem(ekKey, document.getElementById(id).value);
+  });
+});
+
+// ── Google Sheets Sync (read-only) ───────────────────────────────────────────
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
+
+async function loadFromSheet() {
+  if (!SYNC_URL) return;
+  try {
+    const resp = await fetch(SYNC_URL + '?action=read');
+    const data = await resp.json();
+    let updated = false;
+    Object.entries(data).forEach(([key, val]) => {
+      if (key.startsWith('ek_')) { localStorage.setItem(key, val); updated = true; }
+    });
+    if (updated) recalculate();
+  } catch(e) {
+    console.warn('Sheet sync misslyckades', e);
+  }
+}
+
+// Kör direkt vid laddning
+recalculate();
+loadFromSheet();
+</script>
+</body>
+</html>
