@@ -170,6 +170,7 @@
       <div class="item"><span class="name">TjP Sverige (F+U+VXL)</span><span class="amount" style="color:var(--purple)" id="h3-tjp-sve">—</span></div>
       <div class="item"><span class="name">TjP Norge + DNB/SB</span><span class="amount" style="color:var(--purple)" id="h3-tjp-nor">—</span></div>
       <div class="item"><span class="name">Premiepension AP7</span><span class="amount" style="color:var(--purple)" id="h3-pp">—</span></div>
+      <div class="item" id="h3-isk-row" style="display:none"><span class="name">ISK/Depå fonder</span><span class="amount" style="color:var(--purple)" id="h3-isk">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Totalt</div>
@@ -394,7 +395,8 @@ function render() {
   const tjpNorF    = ek('bal_norgef',0) + ek('bal_dnbf',0) + ek('bal_sbf',0);
   const tjpNorU    = ek('bal_sbu',0) + ek('bal_dnbu',0);
   const pp         = ek('bal_pp_f',0) + ek('bal_pp_u',0);
-  const hink3      = lysaF + lysaU + buffLysa + tjpSveF + tjpSveU + tjpNorF + tjpNorU + pp;
+  const isk        = ek('fnd_lf_global',0) + ek('fnd_lf_spar2040',0) + ek('fnd_lf_sverige',0) + ek('fnd_dnb_tek',0);
+  const hink3      = lysaF + lysaU + buffLysa + tjpSveF + tjpSveU + tjpNorF + tjpNorU + pp + isk;
 
   // Hink 4 — lek
   const norco  = ek('bal_norco_antal',0) * ek('bal_norco_kurs',0);
@@ -424,9 +426,10 @@ function render() {
   const annualCost   = monthly * 12;
   const fireNum      = annualCost / 0.04;
   const maalPct      = totalAll / fireNum * 100;
-  const skulder      = bolanVilla + bolanLag;
+  const skulder      = bolanVilla + bolanLag + ek('skul_eup',0) + ek('skul_csn',0) + ek('skul_ovrigt',0);
   const skuldkvot    = brutto > 0 ? skulder / brutto : 0;
-  const belagPct     = (villa + lagenhet) > 0 ? skulder / (villa + lagenhet) * 100 : 0;
+  const bolanTot     = bolanVilla + bolanLag;
+  const belagPct     = (villa + lagenhet) > 0 ? bolanTot / (villa + lagenhet) * 100 : 0;
   const sparKvotN    = inkomst > 0 ? sparFonder / inkomst * 100 : 0;
   const sparKvotB    = inkomst > 0 ? (sparFonder + (brutto/12 - (ek('in_felipe',0)+ek('in_ulrika',0)))) / (brutto/12) * 100 : 0;
 
@@ -482,6 +485,10 @@ function render() {
   el('h3-tjp-sve').textContent = fmtK(tjpSveF + tjpSveU);
   el('h3-tjp-nor').textContent = fmtK(tjpNorF + tjpNorU);
   el('h3-pp').textContent      = fmtK(pp);
+  if (isk > 0) {
+    el('h3-isk-row').style.display = 'flex';
+    el('h3-isk').textContent = fmtK(isk);
+  }
   el('h3-total').textContent   = '~' + fmtK(hink3);
   el('h3-lek-max').textContent = '~' + fmt(lekMax);
 
@@ -562,7 +569,7 @@ function render() {
   const belagColor = belagPct > 75 ? 'var(--red)' : belagPct > 60 ? 'var(--amber)' : 'var(--green)';
   el('kpi-belag').style.color  = belagColor;
   el('kpi-belag').textContent  = pct(belagPct);
-  el('kpi-belag-sub').textContent = fmtK(skulder) + ' lån / ' + fmtK(villa + lagenhet) + ' fastighet';
+  el('kpi-belag-sub').textContent = fmtK(bolanTot) + ' bolån / ' + fmtK(villa + lagenhet) + ' fastighet';
   el('kpi-spar-n').textContent = pct(sparKvotN);
   el('kpi-spar-b').textContent = pct(Math.max(0, sparKvotB));
 
