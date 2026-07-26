@@ -424,7 +424,8 @@ function render() {
   const buffMax   = monthly * 6;
 
   // Sparande (brutto inkl. TjP-insättning via lön)
-  const sparFonder = ek('spar_lysaf',0) + ek('spar_lysau',0) + ek('spar_buffert',0) + ek('spar_avanzaN',0) + ek('spar_borgo',0);
+  const lonevxlPmt = parseFloat(localStorage.getItem('rap_lonevxl_pmt')) || 0;
+  const sparFonder = ek('spar_lysaf',0) + ek('spar_lysau',0) + ek('spar_buffert',0) + ek('spar_avanzaN',0) + ek('spar_borgo',0) + lonevxlPmt;
   const inkomst    = ek('in_felipe',0) + ek('in_ulrika',0) + ek('in_vard',0) + ek('in_barn',0) + ek('in_lagenhet',0);
 
   // FIRE — använd levnadskostnad från rapport_interaktiv (65 000 kr/mån default)

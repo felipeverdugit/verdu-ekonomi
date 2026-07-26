@@ -1240,7 +1240,10 @@ document.getElementById('check-aktier-fire').addEventListener('change', recalcul
 document.getElementById('input-uttag-belopp').addEventListener('input', recalculate);
 document.getElementById('input-uttag-ar').addEventListener('input', recalculate);
 document.getElementById('input-fonder-pmt').addEventListener('input', recalculate);
-document.getElementById('input-lonevxl-pmt').addEventListener('input', recalculate);
+document.getElementById('input-lonevxl-pmt').addEventListener('input', function() {
+  localStorage.setItem('rap_lonevxl_pmt', this.value);
+  recalculate();
+});
 document.getElementById('input-lysa-fv').addEventListener('input', recalculate);
 document.getElementById('input-lysa-uv').addEventListener('input', recalculate);
 document.getElementById('input-buffert-uv').addEventListener('input', recalculate);
@@ -1296,10 +1299,12 @@ async function loadFromSheet() {
   }
 }
 
-// Ladda levnadskostnad från localStorage om sparat
+// Ladda sparade värden från localStorage
 (function() {
-  const saved = localStorage.getItem('rap_levnadskostnad');
-  if (saved) document.getElementById('input-exp').value = saved;
+  const exp = localStorage.getItem('rap_levnadskostnad');
+  if (exp) document.getElementById('input-exp').value = exp;
+  const lvxl = localStorage.getItem('rap_lonevxl_pmt');
+  if (lvxl) document.getElementById('input-lonevxl-pmt').value = lvxl;
 })();
 
 // Kör direkt vid laddning
