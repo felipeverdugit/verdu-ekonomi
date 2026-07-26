@@ -139,7 +139,7 @@
         <span class="amount" style="color:var(--green)" id="h2-ip">—</span>
       </div>
       <div class="item">
-        <span class="name">NAV Norge (NOK→SEK)</span>
+        <span class="name">NAV Norge F+U (NOK→SEK)</span>
         <span class="amount" style="color:var(--green)" id="h2-nav">—</span>
       </div>
       <hr class="item-divider">
@@ -376,7 +376,7 @@ function render() {
 
   // Hink 2
   const ip         = ek('bal_ap_f', 0) + ek('bal_ap_u', 0);
-  const navEst     = ek('bal_nav_f', 0) * ek('bal_nok_sek', 0.97);
+  const navEst     = (ek('bal_nav_f', 0) + ek('bal_nav_u', 0)) * ek('bal_nok_sek', 0.97);
   const villa      = ek('bal_villa', 5300000);
   const lagenhet   = ek('bal_lagenhet', 1800000);
   const bolanVilla = ek('skul_bolan', 3571980);
