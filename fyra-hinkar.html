@@ -170,7 +170,6 @@
       <div class="item"><span class="name">TjP Sverige (F+U+VXL)</span><span class="amount" style="color:var(--purple)" id="h3-tjp-sve">—</span></div>
       <div class="item"><span class="name">TjP Norge + DNB/SB</span><span class="amount" style="color:var(--purple)" id="h3-tjp-nor">—</span></div>
       <div class="item"><span class="name">Premiepension AP7</span><span class="amount" style="color:var(--purple)" id="h3-pp">—</span></div>
-      <div class="item" id="h3-isk-row" style="display:none"><span class="name">ISK/Depå fonder</span><span class="amount" style="color:var(--purple)" id="h3-isk">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Totalt</div>
@@ -395,8 +394,7 @@ function render() {
   const tjpNorF    = ek('bal_norgef',0) + ek('bal_dnbf',0) + ek('bal_sbf',0);
   const tjpNorU    = ek('bal_sbu',0) + ek('bal_dnbu',0);
   const pp         = ek('bal_pp_f',0) + ek('bal_pp_u',0);
-  const isk        = ek('fnd_lf_global',0) + ek('fnd_lf_spar2040',0) + ek('fnd_lf_sverige',0) + ek('fnd_dnb_tek',0);
-  const hink3      = lysaF + lysaU + buffLysa + tjpSveF + tjpSveU + tjpNorF + tjpNorU + pp + isk;
+  const hink3      = lysaF + lysaU + buffLysa + tjpSveF + tjpSveU + tjpNorF + tjpNorU + pp;
 
   // Hink 4 — lek
   const norco  = ek('bal_norco_antal',0) * ek('bal_norco_kurs',0);
@@ -486,10 +484,6 @@ function render() {
   el('h3-tjp-sve').textContent = fmtK(tjpSveF + tjpSveU);
   el('h3-tjp-nor').textContent = fmtK(tjpNorF + tjpNorU);
   el('h3-pp').textContent      = fmtK(pp);
-  if (isk > 0) {
-    el('h3-isk-row').style.display = 'flex';
-    el('h3-isk').textContent = fmtK(isk);
-  }
   el('h3-total').textContent   = '~' + fmtK(hink3);
   el('h3-lek-max').textContent = '~' + fmt(lekMax);
 
