@@ -73,7 +73,7 @@
 <header>
   <h1>Fyra Hinkar — Felipe &amp; Ulrika</h1>
   <p class="subtitle">Live från ekonomi.html &nbsp;·&nbsp; Senast sparad i ekonomi: <span id="sync-ts">—</span></p>
-  <p class="note"><strong>Notering:</strong> Inkomstpension och NAV är uppskattningar (redigerbara ovan varje fält). Fastigheten (villa + lägenhet netto) ingår i Hink 2. Alla övriga siffror synkas automatiskt från ekonomi.html.</p>
+  <p class="note"><strong>Notering:</strong> Alla siffror synkas automatiskt från ekonomi.html (localStorage). Allmänpension = nuvarande pensionskapital (ej projicerat framtida värde). Fastigheten (villa + lägenhet netto) ingår i Hink 2. Enda manuella fältet är bruttoinkomst/år (för skuldkvot).</p>
 </header>
 
 <div class="kpi-row">
@@ -135,18 +135,12 @@
     <div class="hink-purpose">Inflationsskydd, låg risk. Täcks ofta automatiskt.</div>
     <div class="items">
       <div class="item">
-        <span class="name">Inkomstpension SE (est.)</span>
-        <span style="display:flex;align-items:center;gap:4px;">
-          <input class="est-input" id="inp-ip" type="number" step="100000" title="Redigera uppskattning">
-          <span class="est-label">kr</span>
-        </span>
+        <span class="name">Allmänpension F+U</span>
+        <span class="amount" style="color:var(--green)" id="h2-ip">—</span>
       </div>
       <div class="item">
-        <span class="name">NAV Norge (est.)</span>
-        <span style="display:flex;align-items:center;gap:4px;">
-          <input class="est-input" id="inp-nav" type="number" step="50000" title="Redigera uppskattning">
-          <span class="est-label">kr</span>
-        </span>
+        <span class="name">NAV Norge (NOK→SEK)</span>
+        <span class="amount" style="color:var(--green)" id="h2-nav">—</span>
       </div>
       <hr class="item-divider">
       <div class="item"><span class="name" id="h2-villa-lbl">Villa (… − … lån)</span><span class="amount" style="color:var(--green)" id="h2-villa">—</span></div>
@@ -370,25 +364,19 @@ function pct(n)  { return n.toFixed(1) + '%'; }
 function el(id)  { return document.getElementById(id); }
 
 // ── Load editable estimate inputs ─────────────────────────────────────────────
-el('inp-ip').value    = hkGet('inkomstpension', 4500000);
-el('inp-nav').value   = hkGet('nav_sek', 1000000);
 el('inp-brutto').value = hkGet('bruttoinkomst', 906000);
-
-[['inp-ip','inkomstpension'],['inp-nav','nav_sek'],['inp-brutto','bruttoinkomst']].forEach(([id,key]) => {
-  el(id).addEventListener('input', function() { hkSet(key, this.value); render(); });
-});
+el('inp-brutto').addEventListener('input', function() { hkSet('bruttoinkomst', this.value); render(); });
 
 // ── Main render ────────────────────────────────────────────────────────────────
 function render() {
-  // Editable estimates
-  const ip     = parseFloat(el('inp-ip').value)     || 0;
-  const navEst = parseFloat(el('inp-nav').value)    || 0;
   const brutto = parseFloat(el('inp-brutto').value) || 906000;
 
   // Hink 1
   const borgo = ek('bal_sparkonto', 28000);
 
-  // Hink 2 — fastighet
+  // Hink 2
+  const ip         = ek('bal_ap_f', 0) + ek('bal_ap_u', 0);
+  const navEst     = ek('bal_nav_f', 0) * ek('bal_nok_sek', 0.97);
   const villa      = ek('bal_villa', 5300000);
   const lagenhet   = ek('bal_lagenhet', 1800000);
   const bolanVilla = ek('skul_bolan', 3571980);
@@ -480,6 +468,8 @@ function render() {
     : 'Buffert Lysa är en fond → hink 3. Mål: 111 000–222 000 kr';
 
   // Hink 2
+  el('h2-ip').textContent    = fmtK(ip);
+  el('h2-nav').textContent   = fmtK(navEst);
   el('h2-villa-lbl').textContent = 'Villa (' + fmtK(villa) + ' − ' + fmtK(bolanVilla) + ' lån)';
   el('h2-lag-lbl').textContent   = 'Lägenhet (' + fmtK(lagenhet) + ' − ' + fmtK(bolanLag) + ' lån)';
   el('h2-villa').textContent = fmtK(villaNet);
@@ -530,7 +520,7 @@ function render() {
     el('txt-lek').innerHTML = 'NORCO + Oncopeptides uppgår till ' + fmtK(hink4) + ', vilket är <strong>' + pct(lekPct) + ' av tillväxthinken</strong> mot modellens max 10% (' + fmt(lekMax) + '). Överskott: ~<strong>' + fmtK(lekExcess) + '</strong>.';
   }
 
-  el('txt-stark').innerHTML = 'TjP Sverige + Norge + Lysa-fonder = ~' + fmtK(hink3) + ' i tillväxt. Inkomstpension + NAV = ~' + fmtK(ip + navEst) + ' i stabil bevara-hink. Dessa täcker grundpensionen utan att ni behöver ta hög risk i fonderna.';
+  el('txt-stark').innerHTML = 'TjP Sverige + Norge + Lysa-fonder = ~' + fmtK(hink3) + ' i tillväxt. Allmänpension + NAV = ~' + fmtK(ip + navEst) + ' i stabil bevara-hink. Dessa täcker grundpensionen utan att ni behöver ta hög risk i fonderna.';
 
   // Nästa steg
   if (lekExcess > 0 || buffNeeded > 0) {
