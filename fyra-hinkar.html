@@ -1,143 +1,104 @@
 <title>Fyra Hinkar — Felipe & Ulrika</title>
 <style>
   :root {
-    --bg: #0f1117;
-    --card: #1a1d27;
-    --card2: #21263a;
-    --border: #2d3348;
-    --text: #e2e8f0;
-    --muted: #8892a4;
-    --blue: #4f8ef7;
-    --green: #6ee7b7;
-    --amber: #f59e0b;
-    --red: #f87171;
-    --purple: #a78bfa;
-    --radius: 14px;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f4f6fb;
-      --card: #ffffff;
-      --card2: #eef1f8;
-      --border: #d1d9e6;
-      --text: #1a1d27;
-      --muted: #5a6380;
-    }
-  }
-  :root[data-theme="dark"] {
     --bg: #0f1117; --card: #1a1d27; --card2: #21263a;
     --border: #2d3348; --text: #e2e8f0; --muted: #8892a4;
+    --blue: #4f8ef7; --green: #6ee7b7; --amber: #f59e0b;
+    --red: #f87171; --purple: #a78bfa; --radius: 14px;
   }
-  :root[data-theme="light"] {
-    --bg: #f4f6fb; --card: #ffffff; --card2: #eef1f8;
-    --border: #d1d9e6; --text: #1a1d27; --muted: #5a6380;
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f4f6fb; --card:#fff; --card2:#eef1f8; --border:#d1d9e6; --text:#1a1d27; --muted:#5a6380; }
   }
+  :root[data-theme="dark"]  { --bg:#0f1117; --card:#1a1d27; --card2:#21263a; --border:#2d3348; --text:#e2e8f0; --muted:#8892a4; }
+  :root[data-theme="light"] { --bg:#f4f6fb; --card:#fff;    --card2:#eef1f8; --border:#d1d9e6; --text:#1a1d27; --muted:#5a6380; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-    padding: 32px 24px 48px;
-    max-width: 960px;
-    margin: 0 auto;
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:32px 24px 48px; max-width:960px; margin:0 auto; }
+
+  header { margin-bottom:32px; }
+  h1 { font-size:1.75rem; font-weight:700; color:var(--blue); margin-bottom:4px; }
+  .subtitle { color:var(--muted); font-size:.875rem; }
+  .note { background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:.8rem; color:var(--muted); margin-top:12px; }
+  .note strong { color:var(--text); }
+
+  .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:32px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+  .kpi .lbl { font-size:.7rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:4px; }
+  .kpi .val { font-size:1.25rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .kpi .sub { font-size:.75rem; color:var(--muted); margin-top:2px; }
+
+  .hinkar { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:36px; }
+  .hink { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:12px; }
+  .hink-header { display:flex; align-items:flex-start; gap:12px; }
+  .hink-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .hink-num { font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .hink-name { font-size:.95rem; font-weight:700; }
+  .hink-purpose { font-size:.78rem; color:var(--muted); line-height:1.4; }
+  .hink-total { font-size:1.3rem; font-weight:800; font-variant-numeric:tabular-nums; padding-top:8px; border-top:1px solid var(--border); }
+  .hink-total-label { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
+
+  .items { display:flex; flex-direction:column; gap:6px; }
+  .item { display:flex; justify-content:space-between; align-items:baseline; font-size:.82rem; gap:8px; }
+  .item .name { color:var(--muted); }
+  .item .amount { font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; }
+  .item-divider { border:none; border-top:1px solid var(--border); margin:4px 0; }
+
+  .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:.7rem; font-weight:700; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.05em; }
+  .badge-ok    { background:#6ee7b720; color:var(--green); }
+  .badge-warn  { background:#f59e0b20; color:var(--amber); }
+  .badge-alert { background:#f8717120; color:var(--red); }
+
+  .findings { display:flex; flex-direction:column; gap:12px; margin-bottom:36px; }
+  .finding { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; gap:14px; align-items:flex-start; }
+  .finding-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:7px; }
+  .finding h3 { font-size:.9rem; font-weight:700; margin-bottom:4px; }
+  .finding p  { font-size:.82rem; color:var(--muted); line-height:1.5; }
+  .finding strong { color:var(--text); }
+
+  .section-title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:14px; }
+  footer { color:var(--muted); font-size:.75rem; border-top:1px solid var(--border); padding-top:20px; }
+
+  /* Editable estimate inputs */
+  .est-input {
+    background:var(--card2); border:1px dashed var(--border); color:var(--text);
+    border-radius:6px; padding:2px 6px; font-size:.82rem; font-weight:600;
+    font-variant-numeric:tabular-nums; width:90px; text-align:right;
+    -moz-appearance:textfield;
   }
-
-  header { margin-bottom: 32px; }
-  h1 { font-size: 1.75rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
-  .subtitle { color: var(--muted); font-size: .875rem; }
-  .note { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: .8rem; color: var(--muted); margin-top: 12px; }
-  .note strong { color: var(--text); }
-
-  /* KPI row */
-  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 32px; }
-  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-  .kpi .lbl { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
-  .kpi .val { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .kpi .sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
-
-  /* Hinkar */
-  .hinkar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 36px; }
-  .hink { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-  .hink-header { display: flex; align-items: flex-start; gap: 12px; }
-  .hink-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
-  .hink-num { font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-  .hink-name { font-size: .95rem; font-weight: 700; }
-  .hink-purpose { font-size: .78rem; color: var(--muted); line-height: 1.4; }
-  .hink-total { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; padding-top: 8px; border-top: 1px solid var(--border); }
-  .hink-total-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
-
-  .items { display: flex; flex-direction: column; gap: 6px; }
-  .item { display: flex; justify-content: space-between; align-items: baseline; font-size: .82rem; gap: 8px; }
-  .item .name { color: var(--muted); }
-  .item .amount { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
-  .item-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
-
-  .status-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: .7rem; font-weight: 700; padding: 3px 8px;
-    border-radius: 20px; text-transform: uppercase; letter-spacing: .05em;
-  }
-  .badge-ok    { background: #6ee7b720; color: var(--green); }
-  .badge-warn  { background: #f59e0b20; color: var(--amber); }
-  .badge-alert { background: #f8717120; color: var(--red); }
-
-  /* Findings */
-  .findings { display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; }
-  .finding {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px 20px;
-    display: flex; gap: 14px; align-items: flex-start;
-  }
-  .finding-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    flex-shrink: 0; margin-top: 7px;
-  }
-  .finding h3 { font-size: .9rem; font-weight: 700; margin-bottom: 4px; }
-  .finding p  { font-size: .82rem; color: var(--muted); line-height: 1.5; }
-  .finding strong { color: var(--text); }
-
-  .section-title {
-    font-size: .7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .1em; color: var(--muted); margin-bottom: 14px;
-  }
-
-  footer { color: var(--muted); font-size: .75rem; border-top: 1px solid var(--border); padding-top: 20px; }
+  .est-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .est-input:focus { outline:none; border-color:var(--blue); }
+  .est-label { font-size:.65rem; color:var(--muted); margin-left:3px; }
 </style>
 
 <header>
-  <h1>Fyra Hinkar — Felipe & Ulrika</h1>
-  <p class="subtitle">Analys baserad på snapshot 16 juli 2026 · Totalt 11 183 192 kr i finansiella tillgångar</p>
-  <p class="note"><strong>Notering:</strong> Inomkategori-fördelning (t.ex. AP7 vs inkomstpension inom Allmänpension) är uppskattad. Fastigheten (villa + lägenhet netto) ingår i Hink 2.</p>
+  <h1>Fyra Hinkar — Felipe &amp; Ulrika</h1>
+  <p class="subtitle">Live från ekonomi.html &nbsp;·&nbsp; Senast sparad i ekonomi: <span id="sync-ts">—</span></p>
+  <p class="note"><strong>Notering:</strong> Inkomstpension och NAV är uppskattningar (redigerbara ovan varje fält). Fastigheten (villa + lägenhet netto) ingår i Hink 2. Alla övriga siffror synkas automatiskt från ekonomi.html.</p>
 </header>
 
-<!-- KPI -->
 <div class="kpi-row">
   <div class="kpi">
     <div class="lbl">Totalt finansiellt</div>
-    <div class="val" style="color:var(--purple)">11,2 MSEK</div>
-    <div class="sub">snapshot 16 jul 2026</div>
+    <div class="val" style="color:var(--purple)" id="kpi-total-fin">—</div>
+    <div class="sub">fonder + TjP + aktier</div>
   </div>
   <div class="kpi">
     <div class="lbl">Löpande utgifter</div>
-    <div class="val" style="color:var(--blue)">~37 000 kr</div>
-    <div class="sub">per månad (ex. sparande)</div>
+    <div class="val" style="color:var(--blue)" id="kpi-monthly">—</div>
+    <div class="sub" id="kpi-monthly-sub">per månad (ex. sparande)</div>
   </div>
   <div class="kpi">
     <div class="lbl">Buffert behov</div>
-    <div class="val" style="color:var(--amber)">111–222 kkr</div>
+    <div class="val" style="color:var(--amber)" id="kpi-buffert-need">—</div>
     <div class="sub">3–6 månaders utgifter</div>
   </div>
   <div class="kpi">
-    <div class="lbl">Lek — max 10%</div>
-    <div class="val" style="color:var(--red)">873 961 kr</div>
-    <div class="sub">≈20% av tillväxt → för högt</div>
+    <div class="lbl">Lek — aktuellt</div>
+    <div class="val" style="color:var(--red)" id="kpi-lek-tot">—</div>
+    <div class="sub" id="kpi-lek-sub">av hink 3</div>
   </div>
 </div>
 
-<!-- Hinkar -->
 <p class="section-title">Fördelning per hink</p>
 <div class="hinkar">
 
@@ -152,13 +113,13 @@
     </div>
     <div class="hink-purpose">Kortsiktig trygghet — snabb tillgång, inga svängningar.</div>
     <div class="items">
-      <div class="item"><span class="name">Borgo Bank (sparkonto)</span><span class="amount" style="color:var(--blue)">28 000 kr</span></div>
+      <div class="item"><span class="name">Borgo Bank (sparkonto)</span><span class="amount" style="color:var(--blue)" id="h1-borgo">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Totalt buffert</div>
-      <div class="hink-total" style="color:var(--blue)">28 000 kr</div>
-      <div style="margin-top:8px;"><span class="status-badge badge-alert">⚠ Kritiskt underfunderad</span></div>
-      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Buffert Lysa är en fond → hink 3. Mål: 111 000–222 000 kr</div>
+      <div class="hink-total" style="color:var(--blue)" id="h1-total">—</div>
+      <div style="margin-top:8px;" id="h1-badge-wrap"><span class="status-badge badge-alert" id="h1-badge">⚠ Kritiskt underfunderad</span></div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;" id="h1-note">Mål: — kr</div>
     </div>
   </div>
 
@@ -173,15 +134,27 @@
     </div>
     <div class="hink-purpose">Inflationsskydd, låg risk. Täcks ofta automatiskt.</div>
     <div class="items">
-      <div class="item"><span class="name">Inkomstpension SE (est.)</span><span class="amount" style="color:var(--green)">~4 500 kkr</span></div>
-      <div class="item"><span class="name">NAV Norge (est.)</span><span class="amount" style="color:var(--green)">~1 000 kkr</span></div>
+      <div class="item">
+        <span class="name">Inkomstpension SE (est.)</span>
+        <span style="display:flex;align-items:center;gap:4px;">
+          <input class="est-input" id="inp-ip" type="number" step="100000" title="Redigera uppskattning">
+          <span class="est-label">kr</span>
+        </span>
+      </div>
+      <div class="item">
+        <span class="name">NAV Norge (est.)</span>
+        <span style="display:flex;align-items:center;gap:4px;">
+          <input class="est-input" id="inp-nav" type="number" step="50000" title="Redigera uppskattning">
+          <span class="est-label">kr</span>
+        </span>
+      </div>
       <hr class="item-divider">
-      <div class="item"><span class="name">Villa (5 300 − 3 572 lån)</span><span class="amount" style="color:var(--green)">1 728 kkr</span></div>
-      <div class="item"><span class="name">Lägenhet (1 800 − 1 251 lån)</span><span class="amount" style="color:var(--green)">549 kkr</span></div>
+      <div class="item"><span class="name" id="h2-villa-lbl">Villa (… − … lån)</span><span class="amount" style="color:var(--green)" id="h2-villa">—</span></div>
+      <div class="item"><span class="name" id="h2-lag-lbl">Lägenhet (… − … lån)</span><span class="amount" style="color:var(--green)" id="h2-lag">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Uppskattat totalt</div>
-      <div class="hink-total" style="color:var(--green)">~7 777 kkr</div>
+      <div class="hink-total" style="color:var(--green)" id="h2-total">—</div>
       <div style="margin-top:8px;"><span class="status-badge badge-ok">✓ Välförsedd</span></div>
       <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Livslånga pensioner + fastigheter täcker grundbehov</div>
     </div>
@@ -198,17 +171,17 @@
     </div>
     <div class="hink-purpose">Långsiktig förmögenhetsuppbyggnad — indexfonder, pensioner.</div>
     <div class="items">
-      <div class="item"><span class="name">Lysa F + Lysa U</span><span class="amount" style="color:var(--purple)">667 kkr</span></div>
-      <div class="item"><span class="name">Buffert Lysa (fond → hink 3)</span><span class="amount" style="color:var(--purple)">343 kkr</span></div>
-      <div class="item"><span class="name">TjP Sverige (F+U+VXL)</span><span class="amount" style="color:var(--purple)">1 143 kkr</span></div>
-      <div class="item"><span class="name">TjP Norge + DNB/SB</span><span class="amount" style="color:var(--purple)">1 595 kkr</span></div>
-      <div class="item"><span class="name">AP7 / Premiepension (est.)</span><span class="amount" style="color:var(--purple)">~1 000 kkr</span></div>
+      <div class="item"><span class="name">Lysa F + Lysa U</span><span class="amount" style="color:var(--purple)" id="h3-lysa">—</span></div>
+      <div class="item"><span class="name">Buffert Lysa (fond)</span><span class="amount" style="color:var(--purple)" id="h3-buffert">—</span></div>
+      <div class="item"><span class="name">TjP Sverige (F+U+VXL)</span><span class="amount" style="color:var(--purple)" id="h3-tjp-sve">—</span></div>
+      <div class="item"><span class="name">TjP Norge + DNB/SB</span><span class="amount" style="color:var(--purple)" id="h3-tjp-nor">—</span></div>
+      <div class="item"><span class="name">Premiepension AP7</span><span class="amount" style="color:var(--purple)" id="h3-pp">—</span></div>
     </div>
     <div>
-      <div class="hink-total-label">Uppskattat totalt</div>
-      <div class="hink-total" style="color:var(--purple)">~4 748 kkr</div>
+      <div class="hink-total-label">Totalt</div>
+      <div class="hink-total" style="color:var(--purple)" id="h3-total">—</div>
       <div style="margin-top:8px;"><span class="status-badge badge-ok">✓ Stark</span></div>
-      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">10%-tak för lek = ~475 kkr</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">10%-tak för lek = <span id="h3-lek-max">—</span></div>
     </div>
   </div>
 
@@ -223,17 +196,17 @@
     </div>
     <div class="hink-purpose">Spekulativt sparande — max 10% av tillväxthinken.</div>
     <div class="items">
-      <div class="item"><span class="name">NORCO (aktier)</span><span class="amount" style="color:var(--amber)">del av 874 kkr</span></div>
-      <div class="item"><span class="name">Oncopeptides (aktier)</span><span class="amount" style="color:var(--amber)">del av 874 kkr</span></div>
+      <div class="item"><span class="name">NORCO (aktier)</span><span class="amount" style="color:var(--amber)" id="h4-norco">—</span></div>
+      <div class="item"><span class="name">Oncopeptides (aktier)</span><span class="amount" style="color:var(--amber)" id="h4-oncop">—</span></div>
       <hr class="item-divider">
-      <div class="item"><span class="name">Max tillåtet (10%)</span><span class="amount" style="color:var(--muted)">~475 kkr</span></div>
-      <div class="item"><span class="name">Överskott</span><span class="amount" style="color:var(--red)">~399 kkr</span></div>
+      <div class="item"><span class="name">Max tillåtet (10%)</span><span class="amount" style="color:var(--muted)" id="h4-max">—</span></div>
+      <div class="item"><span class="name">Överskott</span><span class="amount" style="color:var(--red)" id="h4-excess">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Faktiskt totalt</div>
-      <div class="hink-total" style="color:var(--amber)">874 kkr</div>
-      <div style="margin-top:8px;"><span class="status-badge badge-alert">⚠ 18% — för högt</span></div>
-      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Gräns: ~475 kkr (10% av hink 3)</div>
+      <div class="hink-total" style="color:var(--amber)" id="h4-total">—</div>
+      <div style="margin-top:8px;" id="h4-badge-wrap"><span class="status-badge" id="h4-badge">—</span></div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;">Gräns: <span id="h4-grans">—</span></div>
     </div>
   </div>
 
@@ -243,19 +216,19 @@
 <p class="section-title">Slutsatser</p>
 <div class="findings">
 
-  <div class="finding">
+  <div class="finding" id="finding-buffert">
     <div class="finding-dot" style="background:var(--red)"></div>
     <div>
       <h3>Bufferten är kritiskt liten</h3>
-      <p>Buffert Lysa är en fond och hör till hink 3. Kvar i hink 1 är bara Borgo Bank (28 000 kr) — knappt en månads utgifter. Ni behöver <strong>111 000–222 000 kr</strong> på ett riskfritt bankkonto. Överväg ett engångstillskott eller tillfälligt pausat fondspararande för att snabba upp.</p>
+      <p id="txt-buffert">—</p>
     </div>
   </div>
 
-  <div class="finding">
+  <div class="finding" id="finding-lek">
     <div class="finding-dot" style="background:var(--amber)"></div>
     <div>
       <h3>Aktier i lek-hinken överstiger 10%-gränsen</h3>
-      <p>NORCO + Oncopeptides uppgår till ~874 kkr, vilket är <strong>~20% av tillväxthinken</strong> mot modellens max 10% (~440 kkr). Modellen säger att ni bör minska exponeringen med ~<strong>434 kkr</strong> och flytta de pengarna till Lysa/indexfonder (hink 3).</p>
+      <p id="txt-lek">—</p>
     </div>
   </div>
 
@@ -263,15 +236,15 @@
     <div class="finding-dot" style="background:var(--green)"></div>
     <div>
       <h3>Tillväxt- och bevara-hinkarna är starka</h3>
-      <p>TjP Sverige + Norge + Lysa-fonder = ~3,8 MSEK i tillväxt. Inkomstpension + NAV = ~5,5 MSEK i stabil bevara-hink. Dessa täcker grundpensionen utan att ni behöver ta hög risk i fonderna.</p>
+      <p id="txt-stark">—</p>
     </div>
   </div>
 
-  <div class="finding">
+  <div class="finding" id="finding-nastan" style="display:none">
     <div class="finding-dot" style="background:var(--blue)"></div>
     <div>
       <h3>Nästa steg — en affär löser två problem</h3>
-      <p>Invänta rätt tillfälle och sälj ~399 kkr av de enskilda aktierna (NORCO/Oncopeptides) med vinst. Fördela intäkterna så här:</p>
+      <p>Invänta rätt tillfälle och sälj av de enskilda aktierna med vinst. Fördela intäkterna så här:</p>
       <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:.85rem;">
         <tr style="border-bottom:1px solid var(--border);">
           <th style="text-align:left;padding:4px 8px;color:var(--muted)">Destination</th>
@@ -280,13 +253,13 @@
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
           <td style="padding:4px 8px">🏦 Borgo Bank (hink 1)</td>
-          <td style="text-align:right;padding:4px 8px">~122 000 kr</td>
-          <td style="padding:4px 8px;color:var(--green)">Buffert: 28 → 150 kkr ✓</td>
+          <td style="text-align:right;padding:4px 8px" id="nastan-borgo">—</td>
+          <td style="padding:4px 8px;color:var(--green)" id="nastan-borgo-eff">—</td>
         </tr>
         <tr>
           <td style="padding:4px 8px">📈 Indexfonder (hink 3)</td>
-          <td style="text-align:right;padding:4px 8px">~277 000 kr</td>
-          <td style="padding:4px 8px;color:var(--green)">Lek: 18% → ~9% ✓</td>
+          <td style="text-align:right;padding:4px 8px" id="nastan-h3">—</td>
+          <td style="padding:4px 8px;color:var(--green)" id="nastan-h3-eff">—</td>
         </tr>
       </table>
       <p style="margin-top:10px;color:var(--muted);font-size:.8rem;">Glöm inte deklarera eventuell kapitalvinst (30% skatt). Sälj gärna i omgångar om kursläget är osäkert.</p>
@@ -295,57 +268,62 @@
 
 </div>
 
-<!-- Hink-fördelning visuell stapel -->
+<!-- Hink-stapel -->
 <p class="section-title">Hink-fördelning</p>
 <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:36px;">
-  <div style="display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:14px;">
-    <div style="width:0.2%;background:#4f8ef7;" title="Buffert 0.2%"></div>
-    <div style="width:57.9%;background:#6ee7b7;" title="Bevara 57.9%"></div>
-    <div style="width:35.4%;background:#a78bfa;" title="Tillväxt 35.4%"></div>
-    <div style="width:6.5%;background:#f59e0b;" title="Lek 6.5%"></div>
+  <div style="display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:14px;" id="stapel-bar">
+    <div id="bar-h1" style="background:#4f8ef7;" title="Buffert"></div>
+    <div id="bar-h2" style="background:#6ee7b7;" title="Bevara"></div>
+    <div id="bar-h3" style="background:#a78bfa;" title="Tillväxt"></div>
+    <div id="bar-h4" style="background:#f59e0b;" title="Lek"></div>
   </div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:.8rem;">
-    <span style="color:#4f8ef7;">💧 Buffert 0.2%</span>
-    <span style="color:#6ee7b7;">🏛 Bevara-värde 57.9%</span>
-    <span style="color:#a78bfa;">📈 Tillväxt 35.4%</span>
-    <span style="color:#f59e0b;">🎲 Lek 6.5%</span>
+    <span style="color:#4f8ef7;">💧 Buffert <span id="pct-h1">—</span></span>
+    <span style="color:#6ee7b7;">🏛 Bevara-värde <span id="pct-h2">—</span></span>
+    <span style="color:#a78bfa;">📈 Tillväxt <span id="pct-h3">—</span></span>
+    <span style="color:#f59e0b;">🎲 Lek <span id="pct-h4">—</span></span>
   </div>
-  <div style="font-size:.75rem;color:var(--muted);margin-top:10px;">Totalt ~13,5 MSEK (finansiellt + fastighet netto) · Snapshot 16 juli 2026</div>
+  <div style="font-size:.75rem;color:var(--muted);margin-top:10px;" id="stapel-note">—</div>
 </div>
 
-<!-- Nyckeltal från Excel -->
+<!-- Nyckeltal -->
 <p class="section-title">Nyckeltal</p>
-<div class="kpi-row" style="margin-bottom:36px;">
+<div class="kpi-row" style="margin-bottom:8px;">
   <div class="kpi">
     <div class="lbl">FIRE-nummer (4%)</div>
-    <div class="val" style="color:var(--green)">11,1 MSEK</div>
-    <div class="sub">444 kkr/år ÷ 4%</div>
+    <div class="val" style="color:var(--green)" id="kpi-fire">—</div>
+    <div class="sub" id="kpi-fire-sub">utgifter/år ÷ 4%</div>
   </div>
   <div class="kpi">
     <div class="lbl">Måluppfyllnad</div>
-    <div class="val" style="color:var(--green)">~121%</div>
-    <div class="sub">13,5 MSEK / 11,1 MSEK</div>
+    <div class="val" id="kpi-maal" style="color:var(--green)">—</div>
+    <div class="sub" id="kpi-maal-sub">totalt / FIRE</div>
   </div>
   <div class="kpi">
     <div class="lbl">Skuldkvot</div>
-    <div class="val" style="color:var(--amber)">5.3</div>
-    <div class="sub">4,8 MSEK skuld / 906 kkr ink. · FI: &gt;4.5 = hög</div>
+    <div class="val" id="kpi-skuld" style="color:var(--amber)">—</div>
+    <div class="sub" id="kpi-skuld-sub">FI: &gt;4.5 = hög</div>
   </div>
   <div class="kpi">
     <div class="lbl">Belåningsgrad</div>
-    <div class="val" style="color:var(--amber)">68%</div>
-    <div class="sub">4,8 MSEK lån / 7,1 MSEK fastighet</div>
+    <div class="val" id="kpi-belag" style="color:var(--amber)">—</div>
+    <div class="sub" id="kpi-belag-sub">lån / fastighetsvärde</div>
   </div>
   <div class="kpi">
     <div class="lbl">Sparkvot (netto)</div>
-    <div class="val" style="color:var(--blue)">~29%</div>
+    <div class="val" style="color:var(--blue)" id="kpi-spar-n">—</div>
     <div class="sub">exkl. pension</div>
   </div>
   <div class="kpi">
     <div class="lbl">Sparkvot (brutto)</div>
-    <div class="val" style="color:var(--blue)">~58%</div>
+    <div class="val" style="color:var(--blue)" id="kpi-spar-b">—</div>
     <div class="sub">inkl. pension</div>
   </div>
+</div>
+<div style="font-size:.78rem;color:var(--muted);margin-bottom:36px;">
+  Bruttoinkomst/år (för skuldkvot):
+  <input class="est-input" id="inp-brutto" type="number" step="10000" style="width:110px;margin-left:6px;" title="Redigera bruttoinkomst/år">
+  <span class="est-label">kr/år</span>
 </div>
 
 <!-- Reflektionsfrågor -->
@@ -369,5 +347,243 @@
 <footer>
   Fyra Hinkar-analysen är informativ, inte finansiell rådgivning &nbsp;·&nbsp;
   Källa: <a href="https://rikatillsammans.se/spara-och-investera/fyra-hinkar-modellen/" target="_blank" style="color:var(--muted)">Rika Tillsammans</a> &nbsp;·&nbsp;
-  Snapshot 16 juli 2026
+  <span id="footer-ts">—</span>
 </footer>
+
+<script>
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const EK = 'ek_', HK = 'hk_';
+function ek(key, def=0) {
+  const v = localStorage.getItem(EK + key);
+  return v !== null && v !== '' ? parseFloat(v) || 0 : def;
+}
+function hkGet(key, def=0) {
+  const v = localStorage.getItem(HK + key);
+  return v !== null && v !== '' ? parseFloat(v) || 0 : def;
+}
+function hkSet(key, val) { localStorage.setItem(HK + key, val); }
+
+function fmt(n)  { return Math.round(n).toLocaleString('sv-SE') + ' kr'; }
+function fmtK(n) { return Math.round(n/1000).toLocaleString('sv-SE') + ' kkr'; }
+function fmtM(n) { return (n/1e6).toFixed(1) + ' MSEK'; }
+function pct(n)  { return n.toFixed(1) + '%'; }
+function el(id)  { return document.getElementById(id); }
+
+// ── Load editable estimate inputs ─────────────────────────────────────────────
+el('inp-ip').value    = hkGet('inkomstpension', 4500000);
+el('inp-nav').value   = hkGet('nav_sek', 1000000);
+el('inp-brutto').value = hkGet('bruttoinkomst', 906000);
+
+[['inp-ip','inkomstpension'],['inp-nav','nav_sek'],['inp-brutto','bruttoinkomst']].forEach(([id,key]) => {
+  el(id).addEventListener('input', function() { hkSet(key, this.value); render(); });
+});
+
+// ── Main render ────────────────────────────────────────────────────────────────
+function render() {
+  // Editable estimates
+  const ip     = parseFloat(el('inp-ip').value)     || 0;
+  const navEst = parseFloat(el('inp-nav').value)    || 0;
+  const brutto = parseFloat(el('inp-brutto').value) || 906000;
+
+  // Hink 1
+  const borgo = ek('bal_sparkonto', 28000);
+
+  // Hink 2 — fastighet
+  const villa      = ek('bal_villa', 5300000);
+  const lagenhet   = ek('bal_lagenhet', 1800000);
+  const bolanVilla = ek('skul_bolan', 3571980);
+  const bolanLag   = ek('skul_bolan_lag', 1250636);
+  const villaNet   = villa - bolanVilla;
+  const lagNet     = lagenhet - bolanLag;
+  const hink2      = ip + navEst + villaNet + lagNet;
+
+  // Hink 3 — tillväxt
+  const lysaF      = ek('bal_lysaf', 211429);
+  const lysaU      = ek('bal_lysau', 154216);
+  const buffLysa   = ek('bal_buffert', 343223);
+  const tjpSveF    = ek('bal_tjpf',0) + ek('bal_lonevxl',0) + ek('bal_tidligare',0) + ek('bal_kapan',0);
+  const tjpSveU    = ek('bal_tjpu', 298300);
+  const tjpNorF    = ek('bal_norgef',0) + ek('bal_dnbf',0) + ek('bal_sbf',0);
+  const tjpNorU    = ek('bal_sbu',0) + ek('bal_dnbu',0);
+  const pp         = ek('bal_pp_f',0) + ek('bal_pp_u',0);
+  const hink3      = lysaF + lysaU + buffLysa + tjpSveF + tjpSveU + tjpNorF + tjpNorU + pp;
+
+  // Hink 4 — lek
+  const norco  = ek('bal_norco_antal',0) * ek('bal_norco_kurs',0);
+  const oncop  = ek('bal_oncop_antal',0) * ek('bal_oncop_kurs',0);
+  const hink4  = norco + oncop;
+
+  // Totals
+  const totalFin = borgo + hink3 + hink4;
+  const totalAll = borgo + hink2 + hink3 + hink4;
+
+  // Monthly expenses (excluding sparande)
+  const boende    = ek('ut_lan1',0) + ek('ut_lan_lag',0) + ek('ut_vatten',0) + ek('ut_tibber',0) + ek('ut_energi',0) + ek('ut_avfall',0);
+  const transport = ek('ut_kia',0) + ek('ut_eup',0);
+  const telefoni  = ek('ut_telia',0) + ek('ut_telenor',0) + ek('ut_tre',0) + ek('ut_bredband5g',0) + ek('ut_telia_cloud',0);
+  const forsakr   = ek('ut_hem',0) + ek('ut_trygg',0) + ek('ut_skandia',0) + ek('ut_if',0) + ek('ut_svl',0);
+  const ovrigt    = ek('ut_led',0) + ek('ut_akas',0) + ek('ut_akas_l',0) + ek('ut_csn',0) + ek('ut_hjarn',0) + ek('ut_friskis',0);
+  const ovriga    = ek('ut_mc_f',0) + ek('ut_mc_u',0);
+  const monthly   = boende + transport + telefoni + forsakr + ovrigt + ovriga;
+  const buffMin   = monthly * 3;
+  const buffMax   = monthly * 6;
+
+  // Sparande (brutto inkl. TjP-insättning via lön)
+  const sparFonder = ek('spar_lysaf',0) + ek('spar_lysau',0) + ek('spar_buffert',0) + ek('spar_avanzaN',0) + ek('spar_borgo',0);
+  const inkomst    = ek('in_felipe',0) + ek('in_ulrika',0) + ek('in_vard',0) + ek('in_barn',0) + ek('in_lagenhet',0);
+
+  // Nyckeltal
+  const annualCost   = monthly * 12;
+  const fireNum      = annualCost / 0.04;
+  const maalPct      = totalAll / fireNum * 100;
+  const skulder      = bolanVilla + bolanLag;
+  const skuldkvot    = brutto > 0 ? skulder / brutto : 0;
+  const belagPct     = (villa + lagenhet) > 0 ? skulder / (villa + lagenhet) * 100 : 0;
+  const sparKvotN    = inkomst > 0 ? sparFonder / inkomst * 100 : 0;
+  const sparKvotB    = inkomst > 0 ? (sparFonder + (brutto/12 - (ek('in_felipe',0)+ek('in_ulrika',0)))) / (brutto/12) * 100 : 0;
+
+  // Lek analysis
+  const lekMax    = hink3 * 0.10;
+  const lekExcess = Math.max(0, hink4 - lekMax);
+  const lekPct    = hink3 > 0 ? hink4 / hink3 * 100 : 0;
+
+  // Buffert plan
+  const buffTarget     = 150000;
+  const buffNeeded     = Math.max(0, buffTarget - borgo);
+  const tillBuffert    = Math.min(buffNeeded, lekExcess);
+  const tillHink3      = lekExcess - tillBuffert;
+
+  // ── Update DOM ──────────────────────────────────────────────────────────────
+
+  // KPI bar
+  el('kpi-total-fin').textContent  = fmtM(totalFin);
+  el('kpi-monthly').textContent    = monthly > 0 ? fmt(monthly) : '—';
+  el('kpi-buffert-need').textContent = monthly > 0 ? fmtK(buffMin) + '–' + fmtK(buffMax) : '—';
+  el('kpi-lek-tot').textContent    = fmt(hink4);
+  el('kpi-lek-sub').textContent    = hink3 > 0 ? pct(lekPct) + ' av hink 3' : 'av hink 3';
+
+  // Hink 1
+  el('h1-borgo').textContent = fmt(borgo);
+  el('h1-total').textContent = fmt(borgo);
+  if (borgo >= buffMin) {
+    el('h1-badge').className = 'status-badge badge-ok';
+    el('h1-badge').textContent = '✓ OK';
+  } else if (borgo >= buffMin * 0.5) {
+    el('h1-badge').className = 'status-badge badge-warn';
+    el('h1-badge').textContent = '⚠ Underfunderad';
+  } else {
+    el('h1-badge').className = 'status-badge badge-alert';
+    el('h1-badge').textContent = '⚠ Kritiskt underfunderad';
+  }
+  el('h1-note').textContent = monthly > 0
+    ? 'Buffert Lysa är en fond → hink 3. Mål: ' + fmt(buffMin) + '–' + fmt(buffMax)
+    : 'Buffert Lysa är en fond → hink 3. Mål: 111 000–222 000 kr';
+
+  // Hink 2
+  el('h2-villa-lbl').textContent = 'Villa (' + fmtK(villa) + ' − ' + fmtK(bolanVilla) + ' lån)';
+  el('h2-lag-lbl').textContent   = 'Lägenhet (' + fmtK(lagenhet) + ' − ' + fmtK(bolanLag) + ' lån)';
+  el('h2-villa').textContent = fmtK(villaNet);
+  el('h2-lag').textContent   = fmtK(lagNet);
+  el('h2-total').textContent = '~' + fmtK(hink2);
+
+  // Hink 3
+  el('h3-lysa').textContent    = fmtK(lysaF + lysaU);
+  el('h3-buffert').textContent = fmtK(buffLysa);
+  el('h3-tjp-sve').textContent = fmtK(tjpSveF + tjpSveU);
+  el('h3-tjp-nor').textContent = fmtK(tjpNorF + tjpNorU);
+  el('h3-pp').textContent      = fmtK(pp);
+  el('h3-total').textContent   = '~' + fmtK(hink3);
+  el('h3-lek-max').textContent = '~' + fmt(lekMax);
+
+  // Hink 4
+  el('h4-norco').textContent  = fmtK(norco);
+  el('h4-oncop').textContent  = fmtK(oncop);
+  el('h4-max').textContent    = '~' + fmt(lekMax);
+  el('h4-excess').textContent = lekExcess > 0 ? '~' + fmtK(lekExcess) : '—';
+  el('h4-total').textContent  = fmtK(hink4);
+  el('h4-grans').textContent  = '~' + fmt(lekMax) + ' (10% av hink 3)';
+  if (lekPct <= 10) {
+    el('h4-badge').className = 'status-badge badge-ok';
+    el('h4-badge').textContent = '✓ ' + pct(lekPct) + ' — OK';
+  } else if (lekPct <= 15) {
+    el('h4-badge').className = 'status-badge badge-warn';
+    el('h4-badge').textContent = '⚠ ' + pct(lekPct) + ' — lite högt';
+  } else {
+    el('h4-badge').className = 'status-badge badge-alert';
+    el('h4-badge').textContent = '⚠ ' + pct(lekPct) + ' — för högt';
+  }
+
+  // Findings
+  if (borgo >= buffMin) {
+    el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--green)';
+    el('txt-buffert').innerHTML = 'Buffert Lysa är en fond och hör till hink 3. Borgo Bank (' + fmt(borgo) + ') täcker ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter — <strong>OK!</strong>';
+  } else {
+    el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--red)';
+    el('txt-buffert').innerHTML = 'Buffert Lysa är en fond och hör till hink 3. Kvar i hink 1 är bara Borgo Bank (' + fmt(borgo) + ') — knappt ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter. Ni behöver <strong>' + fmt(buffMin) + '–' + fmt(buffMax) + '</strong> på ett riskfritt bankkonto.';
+  }
+
+  if (lekPct <= 10) {
+    el('finding-lek').querySelector('.finding-dot').style.background = 'var(--green)';
+    el('txt-lek').innerHTML = 'NORCO + Oncopeptides uppgår till ' + fmtK(hink4) + ' (' + pct(lekPct) + ' av hink 3). <strong>Inom gränsen!</strong> Max tillåtet är ' + fmt(lekMax) + '.';
+  } else {
+    el('finding-lek').querySelector('.finding-dot').style.background = 'var(--amber)';
+    el('txt-lek').innerHTML = 'NORCO + Oncopeptides uppgår till ' + fmtK(hink4) + ', vilket är <strong>' + pct(lekPct) + ' av tillväxthinken</strong> mot modellens max 10% (' + fmt(lekMax) + '). Överskott: ~<strong>' + fmtK(lekExcess) + '</strong>.';
+  }
+
+  el('txt-stark').innerHTML = 'TjP Sverige + Norge + Lysa-fonder = ~' + fmtK(hink3) + ' i tillväxt. Inkomstpension + NAV = ~' + fmtK(ip + navEst) + ' i stabil bevara-hink. Dessa täcker grundpensionen utan att ni behöver ta hög risk i fonderna.';
+
+  // Nästa steg
+  if (lekExcess > 0 || buffNeeded > 0) {
+    el('finding-nastan').style.display = 'flex';
+    el('nastan-borgo').textContent    = tillBuffert > 0 ? '~' + fmt(tillBuffert) : '—';
+    el('nastan-borgo-eff').textContent = tillBuffert > 0 ? 'Buffert: ' + fmt(borgo) + ' → ' + fmt(borgo + tillBuffert) : 'Buffert OK';
+    el('nastan-h3').textContent       = tillHink3 > 0 ? '~' + fmt(tillHink3) : '—';
+    el('nastan-h3-eff').textContent   = 'Lek: ' + pct(lekPct) + ' → ~' + pct((hink4 - lekExcess) / hink3 * 100) + ' ✓';
+  } else {
+    el('finding-nastan').style.display = 'none';
+  }
+
+  // Stapel
+  const pctH1 = totalAll > 0 ? borgo / totalAll * 100 : 0;
+  const pctH2 = totalAll > 0 ? hink2  / totalAll * 100 : 0;
+  const pctH3 = totalAll > 0 ? hink3  / totalAll * 100 : 0;
+  const pctH4 = totalAll > 0 ? hink4  / totalAll * 100 : 0;
+  el('bar-h1').style.width = pct(pctH1);
+  el('bar-h2').style.width = pct(pctH2);
+  el('bar-h3').style.width = pct(pctH3);
+  el('bar-h4').style.width = pct(pctH4);
+  el('pct-h1').textContent = pct(pctH1);
+  el('pct-h2').textContent = pct(pctH2);
+  el('pct-h3').textContent = pct(pctH3);
+  el('pct-h4').textContent = pct(pctH4);
+  el('stapel-note').textContent = 'Totalt ~' + fmtM(totalAll) + ' (finansiellt + fastighet + pension)';
+
+  // Nyckeltal
+  el('kpi-fire').textContent    = fmtM(fireNum);
+  el('kpi-fire-sub').textContent = fmt(annualCost) + '/år ÷ 4%';
+  const maalColor = maalPct >= 100 ? 'var(--green)' : maalPct >= 80 ? 'var(--amber)' : 'var(--red)';
+  el('kpi-maal').style.color   = maalColor;
+  el('kpi-maal').textContent   = pct(maalPct);
+  el('kpi-maal-sub').textContent = fmtM(totalAll) + ' / ' + fmtM(fireNum);
+  const skuldColor = skuldkvot > 4.5 ? 'var(--amber)' : 'var(--green)';
+  el('kpi-skuld').style.color  = skuldColor;
+  el('kpi-skuld').textContent  = skuldkvot.toFixed(1);
+  el('kpi-skuld-sub').textContent = fmtK(skulder) + ' skuld / ' + fmtK(brutto) + ' brutto · FI: >4.5 = hög';
+  const belagColor = belagPct > 75 ? 'var(--red)' : belagPct > 60 ? 'var(--amber)' : 'var(--green)';
+  el('kpi-belag').style.color  = belagColor;
+  el('kpi-belag').textContent  = pct(belagPct);
+  el('kpi-belag-sub').textContent = fmtK(skulder) + ' lån / ' + fmtK(villa + lagenhet) + ' fastighet';
+  el('kpi-spar-n').textContent = pct(sparKvotN);
+  el('kpi-spar-b').textContent = pct(Math.max(0, sparKvotB));
+
+  // Sync timestamp
+  const savedAt = localStorage.getItem('ek_saved_at');
+  const tsText = savedAt
+    ? new Date(savedAt).toLocaleString('sv-SE', {dateStyle:'short', timeStyle:'short'})
+    : 'öppna ekonomi.html och spara för att synka';
+  el('sync-ts').textContent    = tsText;
+  el('footer-ts').textContent  = savedAt ? 'Data från ' + tsText : 'Ej synkat med ekonomi.html';
+}
+
+render();
+</script>

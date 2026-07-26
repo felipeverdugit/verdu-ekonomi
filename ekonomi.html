@@ -294,7 +294,8 @@
       <div class="bal-item"><span class="lbl" style="color:var(--muted);font-size:.8rem;">Oncopeptides totalt</span><span id="oncop-tot" style="font-size:.85rem;font-weight:600;color:var(--orange);">—</span></div>
 
       <div style="color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">Fastighet</div>
-      <div class="bal-item"><span class="lbl">Bostad (marknadsvärde)</span><input type="number" data-key="bal_bostad" value="0" step="50000"></div>
+      <div class="bal-item"><span class="lbl">Villa (marknadsvärde)</span><input type="number" data-key="bal_villa" value="5300000" step="50000"></div>
+      <div class="bal-item"><span class="lbl">Lägenhet (marknadsvärde)</span><input type="number" data-key="bal_lagenhet" value="1800000" step="50000"></div>
 
       <div class="bal-total"><span>Summa tillgångar</span><span id="tot-tillgangar" style="color:var(--green)">—</span></div>
 
@@ -449,6 +450,7 @@ function saveAll() {
   });
   const now = new Date().toLocaleString('sv-SE', { dateStyle:'short', timeStyle:'short' });
   document.getElementById('last-saved').textContent = now;
+  localStorage.setItem('ek_saved_at', new Date().toISOString());
 }
 
 function v(key) {
@@ -498,7 +500,7 @@ function recalculate() {
   const aktier   = norcoTot + oncopTot;
   document.getElementById('norco-tot').textContent = Math.round(norcoTot).toLocaleString('sv-SE') + ' kr';
   document.getElementById('oncop-tot').textContent = Math.round(oncopTot).toLocaleString('sv-SE') + ' kr';
-  const bostad   = v('bal_bostad');
+  const bostad   = v('bal_villa') + v('bal_lagenhet');
   const tillgTot = fonder + tjp + norge + allman + aktier + bostad;
 
   const skulder  = v('skul_bolan') + v('skul_bolan_lag') + v('skul_kia') + v('skul_eup') + v('skul_csn') + v('skul_ovrigt');
