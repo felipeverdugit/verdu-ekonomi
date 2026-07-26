@@ -281,6 +281,11 @@
   <div style="font-size:.75rem;color:var(--muted);margin-top:10px;" id="stapel-note">—</div>
 </div>
 
+<!-- Rikedomstrappan -->
+<p class="section-title">Rikedomstrappan</p>
+<div id="rtrappa" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+<div id="rt-summary" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-size:.85rem;color:var(--muted);margin-bottom:36px;line-height:1.6;"></div>
+
 <!-- Nyckeltal -->
 <p class="section-title">Nyckeltal</p>
 <div class="kpi-row" style="margin-bottom:8px;">
@@ -570,6 +575,106 @@ function render() {
   el('kpi-belag-sub').textContent = fmtK(bolanTot) + ' bolån / ' + fmtK(villa + lagenhet) + ' fastighet';
   el('kpi-spar-n').textContent = pct(sparKvotN);
   el('kpi-spar-b').textContent = pct(Math.max(0, sparKvotB));
+
+  // ── Rikedomstrappan ──────────────────────────────────────────────────────────
+  const rt = [
+    {
+      n:1, icon:'🛡', namn:'Ekonomisk trygghet',
+      desc:'Inga dåliga skulder, börjat spara, grundskydd på plats.',
+      check:[
+        { lbl:'Har buffert',            ok: borgo > 0 },
+        { lbl:'Inga konsumtionslån',    ok: ek('skul_ovrigt',0) === 0 },
+        { lbl:'Sparar regelbundet',     ok: sparFonder > 0 },
+      ]
+    },
+    {
+      n:2, icon:'💰', namn:'Ekonomisk stabilitet',
+      desc:'3–6 mån buffert, kontroll på ekonomin, låg skuldsättning.',
+      check:[
+        { lbl:'3 mån buffert (≥ ' + fmt(buffMin) + ')', ok: borgo >= buffMin },
+        { lbl:'Aktivt fondspararande',   ok: sparFonder > 3000 },
+        { lbl:'Skuldkvot < 4.5 (FI)',   ok: skuldkvot < 4.5 },
+      ]
+    },
+    {
+      n:3, icon:'📈', namn:'Ekonomisk frihet',
+      desc:'Passiv inkomst täcker grundbehov. Kan ta risker med jobbet.',
+      check:[
+        { lbl:'Hink 2 > 5 MSEK (pension + fastighet)', ok: hink2 > 5000000 },
+        { lbl:'Hink 3 > 3 MSEK (tillväxt)',            ok: hink3 > 3000000 },
+      ]
+    },
+    {
+      n:4, icon:'🎯', namn:'Ekonomiskt oberoende',
+      desc:'Kan leva på passiv avkastning. FIRE är möjligt.',
+      check:[
+        { lbl:'Måluppfyllnad ≥ 80% av FIRE-tal', ok: maalPct >= 80 },
+        { lbl:'Buffert OK (≥ 3 mån)',             ok: borgo >= buffMin },
+        { lbl:'Hink 4 ≤ 10% av hink 3',          ok: hink4 <= hink3 * 0.10 },
+      ]
+    },
+    {
+      n:5, icon:'🏆', namn:'Ekonomiskt välstånd',
+      desc:'Mer än nog. Kan ge bort och investera utan ekonomisk oro.',
+      check:[
+        { lbl:'Måluppfyllnad ≥ 150% av FIRE-tal', ok: maalPct >= 150 },
+        { lbl:'Hink 3 > 10 MSEK',                 ok: hink3 > 10000000 },
+      ]
+    },
+  ];
+
+  const rtS = rt.map(l => ({ ...l, allOk: l.check.every(c=>c.ok), score: l.check.filter(c=>c.ok).length }));
+  let rtLevel = 0;
+  rtS.forEach(l => { if (l.allOk) rtLevel = l.n; });
+  // Highest level where ANY criteria pass (for nuance)
+  let rtHighest = 0;
+  rtS.forEach(l => { if (l.score > 0) rtHighest = l.n; });
+
+  const rtrEl = el('rtrappa');
+  rtrEl.innerHTML = '';
+  [...rtS].reverse().forEach(l => {
+    const isReached  = l.allOk;
+    const isTop      = l.n === rtLevel && l.allOk;
+    const isNextGoal = !l.allOk && l.n === Math.min(rtLevel + 1, 5);
+    const bCol = isReached ? '#6ee7b7' : isNextGoal ? '#4f8ef7' : 'var(--border)';
+    const nCol = isReached ? 'var(--green)' : isNextGoal ? 'var(--blue)' : 'var(--muted)';
+    let badge = '';
+    if (isTop)      badge = '<span class="status-badge badge-ok">✓ Ni är här</span>';
+    else if (isReached) badge = '<span class="status-badge badge-ok">✓ Uppnådd</span>';
+    else if (isNextGoal) badge = '<span class="status-badge badge-warn">← Nästa mål</span>';
+    const crit = l.check.map(c =>
+      `<div style="font-size:.78rem;color:${c.ok?'var(--green)':'var(--red)'};margin-top:3px;">${c.ok?'✓':'✗'} ${c.lbl}</div>`
+    ).join('');
+    rtrEl.innerHTML += `<div style="background:var(--card);border:1px solid var(--border);border-left:4px solid ${bCol};border-radius:var(--radius);padding:14px 18px;display:flex;gap:14px;align-items:flex-start;">
+      <div style="font-size:1.3rem;flex-shrink:0;margin-top:2px;">${l.icon}</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+          <div>
+            <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">Nivå ${l.n}</div>
+            <div style="font-weight:700;font-size:.95rem;color:${nCol};">${l.namn}</div>
+            <div style="font-size:.75rem;color:var(--muted);">${l.desc}</div>
+          </div>
+          ${badge}
+        </div>
+        ${crit}
+      </div>
+    </div>`;
+  });
+
+  // Summary
+  const rtSum = el('rt-summary');
+  if (rtLevel >= 4) {
+    rtSum.innerHTML = `<strong style="color:var(--green)">Nivå ${rtLevel} — ${rtS[rtLevel-1].namn}.</strong> Stark position. ${rtLevel < 5 ? 'Nivå 5 kräver avsevärt större portfölj och måluppfyllnad ≥ 150%.' : 'Imponerande!'}`;
+  } else if (rtLevel === 3) {
+    rtSum.innerHTML = `<strong style="color:var(--green)">Formellt nivå ${rtLevel} — ${rtS[rtLevel-1].namn}.</strong> Er förmögenhetsbas är stark men <strong style="color:var(--red)">hink 1-bristen och hög skuldkvot blockerar nivå 4</strong>. Säl aktier, bygg bufferten → nivå 4 är nära.`;
+  } else if (rtLevel === 2) {
+    rtSum.innerHTML = `<strong style="color:var(--green)">Nivå 2 — ${rtS[1].namn}.</strong> God grund. Fokusera på att växa hink 2 och 3 för att nå ekonomisk frihet.`;
+  } else if (rtLevel === 1) {
+    const gap3 = rtS[2].check.filter(c=>!c.ok).map(c=>c.lbl).join(', ');
+    rtSum.innerHTML = `<strong style="color:var(--amber)">Formellt nivå 1</strong> — men er förmögenhetsbas matchar nivå 3–4. Bufferten (${fmt(borgo)}) är det enda som drar ner betyget. Fixa hink 1 och ni befäster nivå 3 direkt.`;
+  } else {
+    rtSum.innerHTML = 'Grundläggande ekonomisk trygghet att arbeta mot.';
+  }
 
   // Sync timestamp
   const savedAt = localStorage.getItem('ek_saved_at');
