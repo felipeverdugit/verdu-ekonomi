@@ -145,6 +145,7 @@
       <hr class="item-divider">
       <div class="item"><span class="name" id="h2-villa-lbl">Villa (… − … lån)</span><span class="amount" style="color:var(--green)" id="h2-villa">—</span></div>
       <div class="item"><span class="name" id="h2-lag-lbl">Lägenhet (… − … lån)</span><span class="amount" style="color:var(--green)" id="h2-lag">—</span></div>
+      <div class="item"><span class="name" style="font-size:.75rem;color:var(--muted)">↑ Amortering/mån (hink 2-sparande)</span><span class="amount" style="color:var(--green);font-size:.75rem;" id="h2-amort">—</span></div>
     </div>
     <div>
       <div class="hink-total-label">Uppskattat totalt</div>
@@ -412,7 +413,8 @@ function render() {
   const forsakr   = ek('ut_hem',0) + ek('ut_trygg',0) + ek('ut_skandia',0) + ek('ut_if',0) + ek('ut_svl',0);
   const ovrigt    = ek('ut_led',0) + ek('ut_akas',0) + ek('ut_akas_l',0) + ek('ut_csn',0) + ek('ut_hjarn',0) + ek('ut_friskis',0);
   const ovriga    = ek('ut_mc_f',0) + ek('ut_mc_u',0);
-  const monthly   = boende + transport + telefoni + forsakr + ovrigt + ovriga;
+  const amort     = ek('amort_villa',3400) + ek('amort_lag',1250);
+  const monthly   = boende + transport + telefoni + forsakr + ovrigt + ovriga - amort;
   const buffMin   = monthly * 3;
   const buffMax   = monthly * 6;
 
@@ -476,6 +478,7 @@ function render() {
   el('h2-lag-lbl').textContent   = 'Lägenhet (' + fmtK(lagenhet) + ' − ' + fmtK(bolanLag) + ' lån)';
   el('h2-villa').textContent = fmtK(villaNet);
   el('h2-lag').textContent   = fmtK(lagNet);
+  el('h2-amort').textContent = '+' + fmt(amort) + '/mån';
   el('h2-total').textContent = '~' + fmtK(hink2);
 
   // Hink 3
