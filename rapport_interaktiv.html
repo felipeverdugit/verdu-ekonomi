@@ -121,7 +121,7 @@
 </script>
 
 <h1>Ekonomisk Översikt — Interaktiv</h1>
-<p class="subtitle">Genererad 2026-07-25 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
+<p class="subtitle">Genererad 2026-07-26 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
 
 <!-- Kontrollpanel -->
 <div class="ctrl-panel">
@@ -545,7 +545,7 @@
 </section>
 
 <footer>
-  Rapport genererad 2026-07-25 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
+  Rapport genererad 2026-07-26 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
 </footer>
 
 <script>
@@ -1224,7 +1224,10 @@ function recalculate() {
 ['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta'].forEach(id =>
   document.getElementById(id).addEventListener('input', recalculate)
 );
-document.getElementById('input-exp').addEventListener('input', recalculate);
+document.getElementById('input-exp').addEventListener('input', function() {
+  localStorage.setItem('rap_levnadskostnad', this.value);
+  recalculate();
+});
 document.getElementById('input-exp2').addEventListener('input', recalculate);
 document.getElementById('input-exp-switch').addEventListener('input', recalculate);
 document.getElementById('input-exp-f').addEventListener('input', recalculate);
@@ -1292,6 +1295,12 @@ async function loadFromSheet() {
     console.warn('Sheet sync misslyckades', e);
   }
 }
+
+// Ladda levnadskostnad från localStorage om sparat
+(function() {
+  const saved = localStorage.getItem('rap_levnadskostnad');
+  if (saved) document.getElementById('input-exp').value = saved;
+})();
 
 // Kör direkt vid laddning
 recalculate();
