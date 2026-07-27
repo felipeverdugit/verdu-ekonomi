@@ -517,12 +517,13 @@
       </table>
     </div>
     <div class="card">
-      <h3>Svensk allmän pension</h3>
+      <h3>Svensk allmän pension (IP + PP)</h3>
       <table>
-        <tr><th>Vem</th><th class="num">Uttaksålder</th><th class="num">Belopp/mån</th></tr>
-        <tr><td>Felipe</td><td class="num">68 år</td><td class="num pos">18 700 kr</td></tr>
-        <tr><td>Ulrika</td><td class="num">68 år</td><td class="num pos">16 800 kr</td></tr>
+        <tr><th>Vem</th><th class="num">Riktålder</th><th class="num">Est. belopp/mån</th></tr>
+        <tr><td>Felipe</td><td class="num">68 år (2043)</td><td class="num pos" id="ap-card-f">—</td></tr>
+        <tr><td>Ulrika</td><td class="num">68 år (2038)</td><td class="num pos" id="ap-card-u">—</td></tr>
       </table>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:8px;">Estimat: projicerat IP+PP-kapital ÷ 200 mån. Avsättningar slutar vid FIRE 2035.</p>
     </div>
   </div>
 
@@ -582,12 +583,12 @@
 
   function calcAP() {
     var IBB = 77400, TAK = 7.5 * IBB;
-    var bF  = ek('brutto_f', 67300) * 12;
-    var bU  = ek('brutto_u', 35500) * 12;
+    var bF   = ek('brutto_f', 67300) * 12;
+    var bU   = ek('brutto_u', 35500) * 12;
     var pgiF = Math.min(bF, TAK);
     var pgiU = Math.min(bU, TAK);
-    var ipF  = pgiF * 0.16, ipU = pgiU * 0.16;
-    var ppF  = pgiF * 0.025, ppU = pgiU * 0.025;
+    var ipF  = pgiF * 0.16,  ipU  = pgiU * 0.16;
+    var ppF  = pgiF * 0.025, ppU  = pgiU * 0.025;
 
     sid('ri-bf',    n(ek('brutto_f', 67300)) + ' kr');
     sid('ri-bu',    n(ek('brutto_u', 35500)) + ' kr');
@@ -602,15 +603,12 @@
 
     var ipRate = (parseFloat(document.getElementById('ri-ip-rate').value) || 3) / 100;
     var ppRate = (parseFloat(document.getElementById('ri-pp-rate').value) || 8) / 100;
-    var ipBal0 = ek('bal_ap_f') + ek('bal_ap_u');
-    var ppBal0 = ek('bal_pp_f') + ek('bal_pp_u');
-    var ipTot  = ipF + ipU, ppTot = ppF + ppU;
-    var tbody  = document.getElementById('ri-proj-body');
-    tbody.innerHTML = '';
-    var thisYear = new Date().getFullYear();
-    var FIRE_YR    = 2035;
+    var thisYear  = new Date().getFullYear();
+    var FIRE_YR   = 2035;
+    var U_RIKT_YR = 2038;
+    var F_RIKT_YR = 2043;
     var DELNINGSTAL = 200;
-    var fireOff    = Math.max(0, FIRE_YR - thisYear);
+    var fireOff   = Math.max(0, FIRE_YR - thisYear);
 
     function projBal(bal0, annNew, rate, totalYrs) {
       var ph1 = Math.min(totalYrs, fireOff);
@@ -621,25 +619,61 @@
       return b1 * Math.pow(1+rate, totalYrs - ph1);
     }
 
-    var milestones = [
-      { yr: 2030, label: 'Ulrika 60 / Felipe 55', rikt: false },
-      { yr: 2035, label: 'FIRE — Ulrika 65 / Felipe 60', rikt: false },
-      { yr: 2038, label: 'Ulrika 68 — riktålder', rikt: true },
-      { yr: 2043, label: 'Felipe 68 — riktålder', rikt: true }
-    ];
-    milestones.forEach(function(m) {
-      var n_yr = m.yr - thisYear;
-      if (n_yr <= 0) return;
-      var ipB = Math.round(projBal(ipBal0, ipTot, ipRate, n_yr));
-      var ppB = Math.round(projBal(ppBal0, ppTot, ppRate, n_yr));
-      var tot = ipB + ppB;
-      var månCol = m.rikt ? '<td class="num" style="color:#f59e0b;font-weight:700;">' + n(Math.round(tot/DELNINGSTAL)) + ' kr *</td>' : '<td class="num">—</td>';
-      var style  = m.rikt ? ' style="background:#0f231820;"' : '';
-      tbody.innerHTML += '<tr' + style + '><td' + (m.rikt ? ' style="color:#6ee7b7;font-weight:600;"' : '') + '>' + m.yr + ' — ' + m.label + '</td>' +
-        '<td class="num pos">' + n(ipB) + ' kr</td>' +
-        '<td class="num">' + n(ppB) + ' kr</td>' +
-        '<td class="num">' + n(tot) + ' kr</td>' + månCol + '</tr>';
+    // Per-person balans vid respektive riktålder
+    var ipF0 = ek('bal_ap_f'), ppF0 = ek('bal_pp_f');
+    var ipU0 = ek('bal_ap_u'), ppU0 = ek('bal_pp_u');
+
+    var ipF_rikt = projBal(ipF0, ipF, ipRate, F_RIKT_YR - thisYear);
+    var ppF_rikt = projBal(ppF0, ppF, ppRate, F_RIKT_YR - thisYear);
+    var ipU_rikt = projBal(ipU0, ipU, ipRate, U_RIKT_YR - thisYear);
+    var ppU_rikt = projBal(ppU0, ppU, ppRate, U_RIKT_YR - thisYear);
+
+    var estF = Math.round((ipF_rikt + ppF_rikt) / DELNINGSTAL);
+    var estU = Math.round((ipU_rikt + ppU_rikt) / DELNINGSTAL);
+
+    // Uppdatera globals → FIRE-tabellen använder nu estimerade värden
+    AP_EST_F = estF;
+    AP_EST_U = estU;
+    sid('ap-card-f', n(estF) + ' kr/mån');
+    sid('ap-card-u', n(estU) + ' kr/mån');
+
+    // Projektionstabellen — kombinerat för 2030/2035, per-person vid riktålder
+    var tbody = document.getElementById('ri-proj-body');
+    tbody.innerHTML = '';
+
+    function projRow(yr, label, ipBal, ppBal, isRikt) {
+      var tot = ipBal + ppBal;
+      var mån = isRikt ? '<td class="num" style="color:#f59e0b;font-weight:700;">' + n(Math.round(tot/DELNINGSTAL)) + ' kr</td>' : '<td class="num">—</td>';
+      var bg  = isRikt ? ' style="background:#0f231820;"' : '';
+      var lbl = isRikt ? ' style="color:#6ee7b7;font-weight:600;"' : '';
+      tbody.innerHTML += '<tr' + bg + '><td' + lbl + '>' + yr + ' — ' + label + '</td>' +
+        '<td class="num pos">' + n(ipBal) + ' kr</td>' +
+        '<td class="num">' + n(ppBal) + ' kr</td>' +
+        '<td class="num">' + n(tot) + ' kr</td>' + mån + '</tr>';
+    }
+
+    // 2030 och 2035 — kombinerat Felipe + Ulrika
+    [{yr:2030, lbl:'Ulrika 60 / Felipe 55'}, {yr:2035, lbl:'FIRE — Ulrika 65 / Felipe 60'}].forEach(function(m) {
+      var ny = m.yr - thisYear;
+      if (ny <= 0) return;
+      projRow(m.yr, m.lbl,
+        Math.round(projBal(ipF0,ipF,ipRate,ny) + projBal(ipU0,ipU,ipRate,ny)),
+        Math.round(projBal(ppF0,ppF,ppRate,ny) + projBal(ppU0,ppU,ppRate,ny)),
+        false);
     });
+
+    // 2038 — Ulrikas kapital
+    if (U_RIKT_YR > thisYear)
+      projRow(U_RIKT_YR, 'Ulrika 68 — riktålder',
+        Math.round(ipU_rikt), Math.round(ppU_rikt), true);
+
+    // 2043 — Felipes kapital
+    if (F_RIKT_YR > thisYear)
+      projRow(F_RIKT_YR, 'Felipe 68 — riktålder',
+        Math.round(ipF_rikt), Math.round(ppF_rikt), true);
+
+    // Trigga om FIRE-tabellen finns (körs efter att recalculate() definierats)
+    if (typeof recalculate === 'function') recalculate();
   }
 
   calcAP();
@@ -674,6 +708,10 @@
 const KONTON  = [{"namn": "Lönväxling", "pv": 73175.0, "pmt": 11638.0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "TjP Kommun (Felipe)", "pv": 187376.0, "pmt": 25000.0, "frekvens": "kvartal", "arbetsrelaterad": true}, {"namn": "TjP UV Kommun (Ulrika)", "pv": 298300.0, "pmt": 6500.0, "frekvens": "kvartal", "arbetsrelaterad": true}, {"namn": "Tidigare LöneVXL+TjP", "pv": 349526.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Lysa (Felipe)", "pv": 211429.0, "pmt": 3750.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "Lysa (Ulrika)", "pv": 154216.0, "pmt": 7620.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "Buffert Lysa (Ulrika)", "pv": 174383.0, "pmt": 8700.0, "frekvens": "manad", "arbetsrelaterad": false}, {"namn": "TjP Kåpan (Felipe)", "pv": 50947.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "TjP Norge — Felipe", "pv": 970000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "DNB (Felipe)", "pv": 212000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Storebrand (Felipe)", "pv": 46000.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "Storebrand (Ulrika)", "pv": 146313.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}, {"namn": "DNB (Ulrika)", "pv": 82702.0, "pmt": 0, "frekvens": "manad", "arbetsrelaterad": true}];
 const GRUPPER = {"Privata fonder (Felipe)": ["Lysa (Felipe)"], "Privata fonder (Ulrika)": ["Lysa (Ulrika)", "Buffert Lysa (Ulrika)"], "TjP (Felipe)": ["TjP Kommun (Felipe)", "TjP Kåpan (Felipe)"], "LöneVXL (Felipe)": ["Lönväxling", "Tidigare LöneVXL+TjP"], "TjP (Ulrika)": ["TjP UV Kommun (Ulrika)"], "TjP Norge (Felipe)": ["TjP Norge — Felipe", "DNB (Felipe)", "Storebrand (Felipe)"], "TjP Norge (Ulrika)": ["Storebrand (Ulrika)", "DNB (Ulrika)"]};
 const PENSION = {"norsk_felipe_inntekt": 9406.0, "norsk_felipe_garanti": 5556.0, "norsk_felipe_sum": 14962.0, "norsk_ulrika_inntekt": 9000.0, "norsk_ulrika_garanti": 5000.0, "norsk_ulrika_sum": 14000.0, "svensk_felipe": 18700.0, "svensk_ulrika": 16800.0};
+// Estimerade månadsbelopp för svensk allmänpension — beräknas dynamiskt i calcAP()
+// Default = Excel-simulering från Pensionsmyndigheten tills calcAP() uppdaterar dem
+let AP_EST_F = PENSION.svensk_felipe;
+let AP_EST_U = PENSION.svensk_ulrika;
 const AKTIER_NU = 1046858.0000000001;
 const BASE_YEAR  = 2026;   // År då scriptet kördes
 const BASE_MONTH = 7;  // Månad då scriptet kördes (1-12)
@@ -1035,9 +1073,9 @@ function recalculate() {
   const f_tjp_slut_yr = f_tjp_start_yr + tjpAr;
   const u_tjp_slut_yr = u_tjp_start_yr + tjpAr;
 
-  const u_allman_sv  = PENSION.svensk_ulrika;
+  const u_allman_sv  = AP_EST_U;   // uppdateras av calcAP() via localStorage-projektion
   const u_allman_no  = PENSION.norsk_ulrika_sum;
-  const f_allman     = PENSION.svensk_felipe;
+  const f_allman     = AP_EST_F;   // uppdateras av calcAP() via localStorage-projektion
 
   // Förbestämt TjP Felipe — fast livslångt belopp fr.o.m. 65 år
   // KPA (334) + Alecta (1 637) + Kåpan (382) = 2 353 kr/mån
