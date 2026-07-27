@@ -73,7 +73,7 @@
 <header>
   <h1>Fyra Hinkar — Felipe &amp; Ulrika</h1>
   <p class="subtitle">Live från ekonomi.html &nbsp;·&nbsp; Senast sparad i ekonomi: <span id="sync-ts">—</span></p>
-  <p class="note"><strong>Notering:</strong> Alla siffror synkas automatiskt från ekonomi.html (localStorage). Allmänpension = nuvarande pensionskapital (ej projicerat framtida värde). Fastigheten (villa + lägenhet netto) ingår i Hink 2. Enda manuella fältet är bruttoinkomst/år (för skuldkvot).</p>
+  <p class="note"><strong>Notering:</strong> Alla siffror synkas automatiskt från ekonomi.html (localStorage). Allmänpension = nuvarande pensionskapital (ej projicerat framtida värde). Fastigheten (villa + lägenhet netto) ingår i Hink 2. Bruttoinkomst/år beräknas automatiskt från bruttolöner i ekonomi.html (kan överskridas manuellt).</p>
 </header>
 
 <div class="kpi-row">
@@ -516,12 +516,14 @@ function pct(n)  { return n.toFixed(1) + '%'; }
 function el(id)  { return document.getElementById(id); }
 
 // ── Load editable estimate inputs ─────────────────────────────────────────────
-el('inp-brutto').value = hkGet('bruttoinkomst', 906000);
+// Bruttoinkomst/år — beräknas från ekonomi.html om inte manuellt överskrivit
+const _bruttoDefault = (ek('brutto_f', 67300) + ek('brutto_u', 35500)) * 12;
+el('inp-brutto').value = hkGet('bruttoinkomst', _bruttoDefault);
 el('inp-brutto').addEventListener('input', function() { hkSet('bruttoinkomst', this.value); render(); });
 
 // ── Main render ────────────────────────────────────────────────────────────────
 function render() {
-  const brutto = parseFloat(el('inp-brutto').value) || 906000;
+  const brutto = parseFloat(el('inp-brutto').value) || (ek('brutto_f', 67300) + ek('brutto_u', 35500)) * 12;
 
   // Hink 1
   const borgo = ek('bal_sparkonto', 28000);
