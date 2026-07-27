@@ -391,15 +391,17 @@
         <tr style="border-bottom:1px solid var(--border);">
           <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">Milstolpe</th>
           <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Inkomstpension</th>
-          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">PP balance</th>
-          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Totalt</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Premiepension</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Totalt kapital</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Est. /mån</th>
         </tr>
       </thead>
       <tbody id="ap-proj-body"></tbody>
     </table>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:10px;">* Månadsbelopp beräknat med delningstal ~<span id="ap-delningstal-lbl">200</span> mån (≈ 16,7 år vid 68). Faktiskt delningstal publiceras årligen av Pensionsmyndigheten. Avsättningar slutar vid FIRE 2035.</div>
   </div>
 </div>
-<div style="font-size:.72rem;color:var(--muted);margin-bottom:36px;padding:0 4px;">Källa: Lag (1998:674) om inkomstgrundad ålderspension · IBB 2025 = 77 400 kr · Bruttolöner hämtas från ekonomi.html</div>
+<div style="font-size:.72rem;color:var(--muted);margin-bottom:36px;padding:0 4px;">Källa: Lag (1998:674) om inkomstgrundad ålderspension · IBB 2025 = 77 400 kr · Riktålder 68 år · Bruttolöner hämtas från ekonomi.html</div>
 
 <!-- Ombalansering -->
 <p class="section-title">Ombalansering — när och hur</p>
@@ -865,24 +867,48 @@ function render() {
   const ppRate   = (parseFloat(document.getElementById('ap-pp-rate').value) || 8) / 100;
   const ipBal0   = ek('bal_ap_f',0) + ek('bal_ap_u',0);
   const ppBal0   = ek('bal_pp_f',0) + ek('bal_pp_u',0);
+  // Tvåfas-projektion: fas 1 = nu→FIRE (avsättningar + tillväxt), fas 2 = FIRE→riktålder (tillväxt)
+  const FIRE_YR   = 2035;   // Ulrika 65 / Felipe 60 — avsättningar slutar
+  const U_RIKT_YR = 2038;   // Ulrika 68 (riktålder)
+  const F_RIKT_YR = 2043;   // Felipe 68 (riktålder)
+  const DELNINGSTAL = 200;  // ~16.7 år vid 68, Pensionsmyndigheten publicerar exakt värde
+  el('ap-delningstal-lbl').textContent = DELNINGSTAL;
+  const thisYr  = new Date().getFullYear();
+  const fireOff = Math.max(0, FIRE_YR - thisYr);  // år till FIRE
+
+  function projBal(bal0, annNew, rate, totalYrs) {
+    const ph1 = Math.min(totalYrs, fireOff);
+    const b1  = ph1 > 0
+      ? bal0 * Math.pow(1 + rate, ph1) + annNew * (Math.pow(1 + rate, ph1) - 1) / rate
+      : bal0;
+    if (totalYrs <= fireOff) return b1;
+    return b1 * Math.pow(1 + rate, totalYrs - ph1);
+  }
+
   const apMilestones = [
-    { targetYr: 2030, label: 'Ulrika 60 / Felipe 55' },
-    { targetYr: 2035, label: 'Ulrika 65 (pension) / Felipe 60' }
+    { targetYr: 2030, label: 'Ulrika 60 / Felipe 55', riktålder: false },
+    { targetYr: FIRE_YR, label: 'FIRE — Ulrika 65 / Felipe 60', riktålder: false },
+    { targetYr: U_RIKT_YR, label: 'Ulrika 68 — riktålder', riktålder: true },
+    { targetYr: F_RIKT_YR, label: 'Felipe 68 — riktålder', riktålder: true }
   ];
-  const thisYr   = new Date().getFullYear();
-  const tbody    = document.getElementById('ap-proj-body');
+
+  const tbody = document.getElementById('ap-proj-body');
   tbody.innerHTML = '';
   apMilestones.forEach(function(m) {
     const n = m.targetYr - thisYr;
     if (n <= 0) return;
-    const ipBal = Math.round(ipBal0 * Math.pow(1 + ipRate, n) + ipTot * (Math.pow(1 + ipRate, n) - 1) / ipRate);
-    const ppBal = Math.round(ppBal0 * Math.pow(1 + ppRate, n) + ppTot * (Math.pow(1 + ppRate, n) - 1) / ppRate);
+    const ipBal = Math.round(projBal(ipBal0, ipTot, ipRate, n));
+    const ppBal = Math.round(projBal(ppBal0, ppTot, ppRate, n));
     const tot   = ipBal + ppBal;
-    tbody.innerHTML += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:7px 8px;color:var(--muted);">' + m.targetYr + ' — ' + m.label + '</td>' +
+    const isRikt = m.riktålder;
+    const månEst = isRikt ? fmt(Math.round(tot / DELNINGSTAL)) + ' kr *' : '—';
+    const rowBg  = isRikt ? 'background:' + (document.documentElement.getAttribute('data-theme') === 'light' ? '#f0fdf4' : '#0f2318') + ';' : '';
+    tbody.innerHTML += '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
+      '<td style="padding:7px 8px;color:' + (isRikt ? 'var(--green)' : 'var(--muted)') + ';font-weight:' + (isRikt ? '600' : '400') + ';">' + m.targetYr + ' — ' + m.label + '</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--green);">' + fmt(ipBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--blue);">' + fmt(ppBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--text);font-weight:600;">' + fmt(tot) + ' kr</td>' +
+      '<td style="padding:7px 8px;text-align:right;color:var(--amber);font-weight:' + (isRikt ? '700' : '400') + ';">' + månEst + '</td>' +
       '</tr>';
   });
 

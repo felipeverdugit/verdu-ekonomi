@@ -561,10 +561,11 @@
       </div>
       <table id="ri-proj-table">
         <thead>
-          <tr><th>År</th><th class="num">Inkomstpension</th><th class="num">Premiepension</th><th class="num">Totalt</th></tr>
+          <tr><th>Milstolpe</th><th class="num">Inkomstpension</th><th class="num">Premiepension</th><th class="num">Totalt kapital</th><th class="num">Est. /mån *</th></tr>
         </thead>
         <tbody id="ri-proj-body"></tbody>
       </table>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:8px;">* Månadsbelopp = totalt kapital ÷ 200 månader (≈ 16,7 år vid 68). Avsättningar slutar vid FIRE 2035. Riktålder: Ulrika 68 = 2038, Felipe 68 = 2043.</p>
     </div>
   </div>
 </section>
@@ -607,20 +608,37 @@
     var tbody  = document.getElementById('ri-proj-body');
     tbody.innerHTML = '';
     var thisYear = new Date().getFullYear();
+    var FIRE_YR    = 2035;
+    var DELNINGSTAL = 200;
+    var fireOff    = Math.max(0, FIRE_YR - thisYear);
+
+    function projBal(bal0, annNew, rate, totalYrs) {
+      var ph1 = Math.min(totalYrs, fireOff);
+      var b1  = ph1 > 0
+        ? bal0 * Math.pow(1+rate,ph1) + annNew*(Math.pow(1+rate,ph1)-1)/rate
+        : bal0;
+      if (totalYrs <= fireOff) return b1;
+      return b1 * Math.pow(1+rate, totalYrs - ph1);
+    }
+
     var milestones = [
-      { yr: 2030, label: 'Ulrika 60 / Felipe 55' },
-      { yr: 2035, label: 'Ulrika 65 (pension) / Felipe 60' }
+      { yr: 2030, label: 'Ulrika 60 / Felipe 55', rikt: false },
+      { yr: 2035, label: 'FIRE — Ulrika 65 / Felipe 60', rikt: false },
+      { yr: 2038, label: 'Ulrika 68 — riktålder', rikt: true },
+      { yr: 2043, label: 'Felipe 68 — riktålder', rikt: true }
     ];
     milestones.forEach(function(m) {
       var n_yr = m.yr - thisYear;
       if (n_yr <= 0) return;
-      var ipB = Math.round(ipBal0 * Math.pow(1+ipRate,n_yr) + ipTot*(Math.pow(1+ipRate,n_yr)-1)/ipRate);
-      var ppB = Math.round(ppBal0 * Math.pow(1+ppRate,n_yr) + ppTot*(Math.pow(1+ppRate,n_yr)-1)/ppRate);
+      var ipB = Math.round(projBal(ipBal0, ipTot, ipRate, n_yr));
+      var ppB = Math.round(projBal(ppBal0, ppTot, ppRate, n_yr));
       var tot = ipB + ppB;
-      tbody.innerHTML += '<tr><td>' + m.yr + ' — ' + m.label + '</td>' +
+      var månCol = m.rikt ? '<td class="num" style="color:#f59e0b;font-weight:700;">' + n(Math.round(tot/DELNINGSTAL)) + ' kr *</td>' : '<td class="num">—</td>';
+      var style  = m.rikt ? ' style="background:#0f231820;"' : '';
+      tbody.innerHTML += '<tr' + style + '><td' + (m.rikt ? ' style="color:#6ee7b7;font-weight:600;"' : '') + '>' + m.yr + ' — ' + m.label + '</td>' +
         '<td class="num pos">' + n(ipB) + ' kr</td>' +
         '<td class="num">' + n(ppB) + ' kr</td>' +
-        '<td class="num">' + n(tot) + ' kr</td></tr>';
+        '<td class="num">' + n(tot) + ' kr</td>' + månCol + '</tr>';
     });
   }
 
