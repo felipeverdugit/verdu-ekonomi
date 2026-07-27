@@ -326,6 +326,81 @@
   <span class="est-label">kr/år</span>
 </div>
 
+<!-- Allmän pension -->
+<p class="section-title">Allmän pension — intjäning &amp; projektion</p>
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:8px;">
+
+  <!-- Info-rad -->
+  <div style="font-size:.78rem;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+    Baserat på 2025 års regler: <strong style="color:var(--text)">18,5 %</strong> av PGI avsätts — <strong style="color:var(--text)">16 %</strong> till inkomstpension och <strong style="color:var(--text)">2,5 %</strong> till premiepension (AP7 Såfa).
+    Inkomsttak: 7,5 × IBB = <strong style="color:var(--text)">580 500 kr/år</strong>.
+    Felipe är <strong style="color:var(--amber)">över taket</strong> — pensionen beräknas på 580 500 kr. Ulrika är under taket.
+  </div>
+
+  <!-- Bidragstabell -->
+  <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:20px;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;"></th>
+        <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Felipe</th>
+        <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Ulrika</th>
+        <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Totalt/år</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--muted);">Bruttolön/mån</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--text);" id="ap-brutto-f">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--text);" id="ap-brutto-u">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--muted);"></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--muted);">PGI/år (ev. capped)</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--text);" id="ap-pgi-f">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--text);" id="ap-pgi-u">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--muted);"></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--muted);">Inkomstpension 16 %/år</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--green);" id="ap-ip-f">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--green);" id="ap-ip-u">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;" id="ap-ip-tot">—</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 8px;color:var(--muted);">Premiepension 2,5 %/år</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--blue);" id="ap-pp-f">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--blue);" id="ap-pp-u">—</td>
+        <td style="padding:7px 8px;text-align:right;color:var(--blue);font-weight:600;" id="ap-pp-tot">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Projektion -->
+  <div style="border-top:1px solid var(--border);padding-top:16px;">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Projektion framåt</div>
+      <label style="font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        Tillväxt IP (inkomstindex) <input id="ap-ip-rate" type="number" value="3" min="0" max="10" step="0.5" style="width:52px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-size:.78rem;"> %
+      </label>
+      <label style="font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        Tillväxt PP (AP7) <input id="ap-pp-rate" type="number" value="8" min="0" max="15" step="0.5" style="width:52px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-size:.78rem;"> %
+      </label>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">År</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">IP balance</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">PP balance</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Totalt</th>
+        </tr>
+      </thead>
+      <tbody id="ap-proj-body"></tbody>
+    </table>
+  </div>
+</div>
+<div style="font-size:.72rem;color:var(--muted);margin-bottom:36px;padding:0 4px;">Källa: Lag (1998:674) om inkomstgrundad ålderspension · IBB 2025 = 77 400 kr · Bruttolöner hämtas från ekonomi.html</div>
+
 <!-- Ombalansering -->
 <p class="section-title">Ombalansering — när och hur</p>
 <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
@@ -759,6 +834,57 @@ function render() {
   const fireBuff1 = Math.round(levnadskostnad * 12 / 1000);
   const fireBuff2 = Math.round(levnadskostnad * 24 / 1000);
   el('ob-fire-buff').textContent = '~' + fireBuff1 + '–' + fireBuff2 + ' kkr';
+
+  // ── Allmän pension — intjäning ────────────────────────────────────────────
+  const IBB_2025   = 77400;
+  const IP_TAK     = 7.5 * IBB_2025;           // 580 500 kr/år
+  const bruttoF    = ek('brutto_f', 67300) * 12;
+  const bruttoU    = ek('brutto_u', 35500) * 12;
+  const pgiF       = Math.min(bruttoF, IP_TAK);
+  const pgiU       = Math.min(bruttoU, IP_TAK);
+  const ipF        = pgiF * 0.16;
+  const ipU        = pgiU * 0.16;
+  const ppF        = pgiF * 0.025;
+  const ppU        = pgiU * 0.025;
+  const ipTot      = ipF + ipU;
+  const ppTot      = ppF + ppU;
+
+  el('ap-brutto-f').textContent = fmt(ek('brutto_f', 67300)) + ' kr';
+  el('ap-brutto-u').textContent = fmt(ek('brutto_u', 35500)) + ' kr';
+  el('ap-pgi-f').textContent    = fmt(pgiF) + ' kr';
+  el('ap-pgi-u').textContent    = fmt(pgiU) + ' kr';
+  el('ap-ip-f').textContent     = fmt(ipF) + ' kr';
+  el('ap-ip-u').textContent     = fmt(ipU) + ' kr';
+  el('ap-ip-tot').textContent   = fmt(ipTot) + ' kr';
+  el('ap-pp-f').textContent     = fmt(ppF) + ' kr';
+  el('ap-pp-u').textContent     = fmt(ppU) + ' kr';
+  el('ap-pp-tot').textContent   = fmt(ppTot) + ' kr';
+
+  // Projektion
+  const ipRate   = (parseFloat(document.getElementById('ap-ip-rate').value) || 3) / 100;
+  const ppRate   = (parseFloat(document.getElementById('ap-pp-rate').value) || 8) / 100;
+  const ipBal0   = ek('bal_ap_f',0) + ek('bal_ap_u',0);
+  const ppBal0   = ek('bal_pp_f',0) + ek('bal_pp_u',0);
+  const years    = [5, 10, 15, 20];
+  const tbody    = document.getElementById('ap-proj-body');
+  tbody.innerHTML = '';
+  years.forEach(function(n) {
+    const ipBal = Math.round(ipBal0 * Math.pow(1 + ipRate, n) + ipTot * (Math.pow(1 + ipRate, n) - 1) / ipRate);
+    const ppBal = Math.round(ppBal0 * Math.pow(1 + ppRate, n) + ppTot * (Math.pow(1 + ppRate, n) - 1) / ppRate);
+    const tot   = ipBal + ppBal;
+    const yr    = new Date().getFullYear() + n;
+    tbody.innerHTML += '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td style="padding:7px 8px;color:var(--muted);">' + yr + ' (+' + n + ' år)</td>' +
+      '<td style="padding:7px 8px;text-align:right;color:var(--green);">' + fmt(ipBal) + ' kr</td>' +
+      '<td style="padding:7px 8px;text-align:right;color:var(--blue);">' + fmt(ppBal) + ' kr</td>' +
+      '<td style="padding:7px 8px;text-align:right;color:var(--text);font-weight:600;">' + fmt(tot) + ' kr</td>' +
+      '</tr>';
+  });
+
+  // Lyssna på rate-inputs för live-uppdatering
+  ['ap-ip-rate','ap-pp-rate'].forEach(function(id) {
+    document.getElementById(id).onchange = render;
+  });
 }
 
 render();

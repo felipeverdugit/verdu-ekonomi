@@ -121,7 +121,7 @@
 </script>
 
 <h1>Ekonomisk Översikt — Interaktiv</h1>
-<p class="subtitle">Genererad 2026-07-26 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
+<p class="subtitle">Genererad 2026-07-27 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
 
 <!-- Kontrollpanel -->
 <div class="ctrl-panel">
@@ -525,7 +525,104 @@
       </table>
     </div>
   </div>
+
+  <!-- Intjäning allmän pension -->
+  <div class="card" style="margin-top:16px;">
+    <h3>Intjäning per år — 2025 års regler</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">
+      18,5 % av PGI avsätts: 16 % → inkomstpension · 2,5 % → premiepension (AP7 Såfa).
+      Inkomsttak: 7,5 × IBB = <strong>580 500 kr/år</strong>.
+      Bruttolöner läses från ekonomi.html (localStorage).
+    </p>
+    <table id="ap-inj-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="num">Felipe</th>
+          <th class="num">Ulrika</th>
+          <th class="num">Totalt/år</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Bruttolön/mån</td><td class="num" id="ri-bf">—</td><td class="num" id="ri-bu">—</td><td class="num"></td></tr>
+        <tr><td>PGI/år (ev. cap)</td><td class="num" id="ri-pgif">—</td><td class="num" id="ri-pgiu">—</td><td class="num"></td></tr>
+        <tr><td>Inkomstpension 16 %/år</td><td class="num pos" id="ri-ipf">—</td><td class="num pos" id="ri-ipu">—</td><td class="num pos" id="ri-iptot">—</td></tr>
+        <tr class="total-row"><td>Premiepension 2,5 %/år</td><td class="num" id="ri-ppf">—</td><td class="num" id="ri-ppu">—</td><td class="num" id="ri-pptot">—</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px;">
+      <strong style="font-size:.82rem;">Projektion (nuvarande balans + nya avsättningar)</strong>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin:8px 0;font-size:.8rem;color:var(--muted);align-items:center;">
+        Tillväxt IP: <input id="ri-ip-rate" type="number" value="3" min="0" max="10" step="0.5"
+          style="width:48px;background:#1e2330;border:1px solid #2d3348;border-radius:5px;color:#e2e8f0;padding:2px 5px;font-size:.8rem;"> %
+        &nbsp;&nbsp;
+        Tillväxt PP: <input id="ri-pp-rate" type="number" value="8" min="0" max="15" step="0.5"
+          style="width:48px;background:#1e2330;border:1px solid #2d3348;border-radius:5px;color:#e2e8f0;padding:2px 5px;font-size:.8rem;"> %
+      </div>
+      <table id="ri-proj-table">
+        <thead>
+          <tr><th>År</th><th class="num">Inkomstpension</th><th class="num">Premiepension</th><th class="num">Totalt</th></tr>
+        </thead>
+        <tbody id="ri-proj-body"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
+
+<script>
+// Allmän pension — intjäning (körs efter huvudskriptet)
+(function() {
+  function ek(key, def) {
+    var v = localStorage.getItem('ek_' + key);
+    return (v !== null && v !== '') ? (parseFloat(v) || 0) : (def || 0);
+  }
+  function n(v) { return Math.round(v).toLocaleString('sv-SE'); }
+  function sid(id, txt) { var e = document.getElementById(id); if (e) e.textContent = txt; }
+
+  function calcAP() {
+    var IBB = 77400, TAK = 7.5 * IBB;
+    var bF  = ek('brutto_f', 67300) * 12;
+    var bU  = ek('brutto_u', 35500) * 12;
+    var pgiF = Math.min(bF, TAK);
+    var pgiU = Math.min(bU, TAK);
+    var ipF  = pgiF * 0.16, ipU = pgiU * 0.16;
+    var ppF  = pgiF * 0.025, ppU = pgiU * 0.025;
+
+    sid('ri-bf',    n(ek('brutto_f', 67300)) + ' kr');
+    sid('ri-bu',    n(ek('brutto_u', 35500)) + ' kr');
+    sid('ri-pgif',  n(pgiF) + ' kr');
+    sid('ri-pgiu',  n(pgiU) + ' kr');
+    sid('ri-ipf',   n(ipF) + ' kr');
+    sid('ri-ipu',   n(ipU) + ' kr');
+    sid('ri-iptot', n(ipF + ipU) + ' kr');
+    sid('ri-ppf',   n(ppF) + ' kr');
+    sid('ri-ppu',   n(ppU) + ' kr');
+    sid('ri-pptot', n(ppF + ppU) + ' kr');
+
+    var ipRate = (parseFloat(document.getElementById('ri-ip-rate').value) || 3) / 100;
+    var ppRate = (parseFloat(document.getElementById('ri-pp-rate').value) || 8) / 100;
+    var ipBal0 = ek('bal_ap_f') + ek('bal_ap_u');
+    var ppBal0 = ek('bal_pp_f') + ek('bal_pp_u');
+    var ipTot  = ipF + ipU, ppTot = ppF + ppU;
+    var tbody  = document.getElementById('ri-proj-body');
+    tbody.innerHTML = '';
+    [5, 10, 15, 20].forEach(function(yr) {
+      var ipB = Math.round(ipBal0 * Math.pow(1+ipRate,yr) + ipTot*(Math.pow(1+ipRate,yr)-1)/ipRate);
+      var ppB = Math.round(ppBal0 * Math.pow(1+ppRate,yr) + ppTot*(Math.pow(1+ppRate,yr)-1)/ppRate);
+      var tot = ipB + ppB;
+      var year = new Date().getFullYear() + yr;
+      tbody.innerHTML += '<tr><td>' + year + ' (+' + yr + ' år)</td>' +
+        '<td class="num pos">' + n(ipB) + ' kr</td>' +
+        '<td class="num">' + n(ppB) + ' kr</td>' +
+        '<td class="num">' + n(tot) + ' kr</td></tr>';
+    });
+  }
+
+  calcAP();
+  document.getElementById('ri-ip-rate').addEventListener('change', calcAP);
+  document.getElementById('ri-pp-rate').addEventListener('change', calcAP);
+})();
+</script>
 
 <!-- FIRE-tabell -->
 <section>
@@ -545,7 +642,7 @@
 </section>
 
 <footer>
-  Rapport genererad 2026-07-26 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
+  Rapport genererad 2026-07-27 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
 </footer>
 
 <script>
