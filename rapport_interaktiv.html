@@ -689,9 +689,15 @@
     <table id="fire-table">
       <thead>
         <tr>
-          <th>Fas</th><th>År</th><th>Ålder</th><th>Händelse</th>
-          <th class="num">Felipe/mån</th><th class="num">Ulrika/mån</th>
-          <th class="num">Totalt/mån</th><th class="num">Gap (fonder)</th>
+          <th style="width:60px;">Fas</th>
+          <th style="width:52px;">År</th>
+          <th style="width:90px;"><span style="color:#6ee7b7;">F</span> / <span style="color:#a78bfa;">U</span> ålder</th>
+          <th>Tillägg</th>
+          <th class="num" style="color:#6ee7b7;">Felipe/mån</th>
+          <th class="num" style="color:#a78bfa;">Ulrika/mån</th>
+          <th class="num">Totalt/mån</th>
+          <th class="num" style="width:70px;">Δ/mån</th>
+          <th class="num" style="width:120px;">Status</th>
         </tr>
       </thead>
       <tbody id="fire-tbody"></tbody>
@@ -1170,24 +1176,63 @@ function recalculate() {
       fas.u = Math.round(fU);
     }
   });
-  const badges = ['badge-blue','badge-green','badge-amber','badge-red','badge-red','badge-red','badge-red'];
+  // Förkortning + färgkodning av händelsetext till kompakta badges
+  function eventBadge(e) {
+    const isU    = e.startsWith('Ulrika');
+    const isFire = e.includes('FIRE') || e.includes('FIRE-dag');
+    const color  = isFire ? '#f59e0b' : isU ? '#a78bfa' : '#6ee7b7';
+    const bg     = isFire ? '#f59e0b18' : isU ? '#a78bfa18' : '#6ee7b718';
+    const prefix = isFire ? '' : isU ? 'U: ' : 'F: ';
+    let label = e
+      .replace(/^(Ulrika|Felipe) \d+:\s*/, '')
+      .replace('FIRE-dag — privata fonder täcker gapet', 'FIRE-dag')
+      .replace('Norsk TjP startar (t.o.m. 77)', 'Norsk TjP →77')
+      .replace('Norsk TjP slutar', 'Norsk TjP slutar')
+      .replace('Svensk TjP Kommun startar', 'Kommun TjP')
+      .replace('Svensk TjP Kommun slutar', 'Kommun TjP slutar')
+      .replace('Förbestämt TjP (Alecta/KPA/Kåpan)', 'Fast TjP')
+      .replace('Allmänpension SE+NO', 'Allmänpension')
+      .replace('Allmänpension Sverige + Norge', 'Allmänpension')
+      .replace(' (redan aktiv)', '')
+      .replace(' (20 år)', '')
+      .trim();
+    return `<span style="display:inline-block;background:${bg};color:${color};border:1px solid ${color}40;border-radius:5px;padding:2px 8px;font-size:.72rem;font-weight:600;margin:2px 2px;white-space:nowrap;">${prefix}${label}</span>`;
+  }
+
+  const fasColors = ['#4f8ef7','#6ee7b7','#f59e0b','#f87171','#f87171','#f87171','#f87171','#f87171','#f87171'];
   const tbody = document.getElementById('fire-tbody');
-  tbody.innerHTML = fasData.map((f,i) => {
-    const tot    = f.f + f.u;
-    const gap    = Math.max(0, expAtYear(f.yr) - tot);
-    const gapTxt = gap > 0
-      ? `<span class="neg">~${fmtKr(gap)}</span>`
-      : `<span class="pos">Självfinansierade</span>`;
-    const fireTag = f.yr === fireYear ? ' <span class="badge badge-blue">FIRE</span>' : '';
-    return `<tr>
-      <td><span class="badge ${badges[i]}">${f.nr}</span>${fireTag}</td>
-      <td>${f.yr}</td>
-      <td>F:${f.ageF} / U:${f.ageU}</td>
-      <td>${(f.events || [f.event]).map(e => `<div>${e}</div>`).join('')}</td>
-      <td class="num pos">${fmtKr(f.f)}</td>
-      <td class="num pos">${fmtKr(f.u)}</td>
-      <td class="num pos">${fmtKr(tot)}</td>
-      <td class="num">${gapTxt}</td>
+  tbody.innerHTML = fasData.map((f, i) => {
+    const tot     = f.f + f.u;
+    const prevTot = i > 0 ? (fasData[i-1].f + fasData[i-1].u) : tot;
+    const delta   = tot - prevTot;
+    const deltaHtml = i === 0 ? '<span style="color:var(--muted)">—</span>'
+      : delta > 0 ? `<span style="color:#6ee7b7;font-weight:600;">+${fmtKr(delta)}</span>`
+      : delta < 0 ? `<span style="color:#f87171;font-weight:600;">${fmtKr(delta)}</span>`
+      : '<span style="color:var(--muted)">±0</span>';
+
+    const gap     = expAtYear(f.yr) - tot;
+    const statusHtml = gap > 0
+      ? `<span style="color:#f87171;font-weight:600;">-${fmtKr(Math.round(gap))}</span>`
+      : `<span style="color:#6ee7b7;font-weight:600;">✓ Självfinans.</span>`;
+
+    const fasColor = fasColors[i] || '#8892a4';
+    const events   = (f.events || [f.event || '']).filter(Boolean);
+
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 10px;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:${fasColor}22;color:${fasColor};font-size:.75rem;font-weight:700;">${f.nr}</span>
+        ${f.yr === fireYear ? '<span style="font-size:.65rem;font-weight:700;color:#f59e0b;margin-left:4px;">FIRE</span>' : ''}
+      </td>
+      <td style="padding:8px 6px;color:var(--muted);font-size:.85rem;">${f.yr}</td>
+      <td style="padding:8px 6px;font-size:.82rem;white-space:nowrap;">
+        <span style="color:#6ee7b7;">F:${f.ageF}</span>&ensp;<span style="color:#a78bfa;">U:${f.ageU}</span>
+      </td>
+      <td style="padding:8px 6px;">${events.map(eventBadge).join('')}</td>
+      <td style="padding:8px 6px;text-align:right;color:#6ee7b7;font-weight:600;">${fmtKr(f.f)}</td>
+      <td style="padding:8px 6px;text-align:right;color:#a78bfa;font-weight:600;">${fmtKr(f.u)}</td>
+      <td style="padding:8px 6px;text-align:right;color:var(--text);font-weight:700;">${fmtKr(tot)}</td>
+      <td style="padding:8px 6px;text-align:right;">${deltaHtml}</td>
+      <td style="padding:8px 6px;text-align:right;">${statusHtml}</td>
     </tr>`;
   }).join('');
 
