@@ -862,19 +862,20 @@ function render() {
   el('ap-pp-u').textContent     = fmt(ppU) + ' kr';
   el('ap-pp-tot').textContent   = fmt(ppTot) + ' kr';
 
-  // Projektion
-  const ipRate   = (parseFloat(document.getElementById('ap-ip-rate').value) || 3) / 100;
-  const ppRate   = (parseFloat(document.getElementById('ap-pp-rate').value) || 8) / 100;
-  const ipBal0   = ek('bal_ap_f',0) + ek('bal_ap_u',0);
-  const ppBal0   = ek('bal_pp_f',0) + ek('bal_pp_u',0);
-  // Tvåfas-projektion: fas 1 = nu→FIRE (avsättningar + tillväxt), fas 2 = FIRE→riktålder (tillväxt)
-  const FIRE_YR   = 2035;   // Ulrika 65 / Felipe 60 — avsättningar slutar
-  const U_RIKT_YR = 2038;   // Ulrika 68 (riktålder)
-  const F_RIKT_YR = 2043;   // Felipe 68 (riktålder)
-  const DELNINGSTAL = 200;  // ~16.7 år vid 68, Pensionsmyndigheten publicerar exakt värde
+  // Projektion — tvåfas per person
+  const ipRate    = (parseFloat(document.getElementById('ap-ip-rate').value) || 3) / 100;
+  const ppRate    = (parseFloat(document.getElementById('ap-pp-rate').value) || 8) / 100;
+  const FIRE_YR   = 2035;
+  const U_RIKT_YR = 2038;
+  const F_RIKT_YR = 2043;
+  const DELNINGSTAL = 200;
   el('ap-delningstal-lbl').textContent = DELNINGSTAL;
   const thisYr  = new Date().getFullYear();
-  const fireOff = Math.max(0, FIRE_YR - thisYr);  // år till FIRE
+  const fireOff = Math.max(0, FIRE_YR - thisYr);
+
+  // Per-person startsaldon
+  const ipF0 = ek('bal_ap_f', 0), ppF0 = ek('bal_pp_f', 0);
+  const ipU0 = ek('bal_ap_u', 0), ppU0 = ek('bal_pp_u', 0);
 
   function projBal(bal0, annNew, rate, totalYrs) {
     const ph1 = Math.min(totalYrs, fireOff);
@@ -885,32 +886,49 @@ function render() {
     return b1 * Math.pow(1 + rate, totalYrs - ph1);
   }
 
-  const apMilestones = [
-    { targetYr: 2030, label: 'Ulrika 60 / Felipe 55', riktålder: false },
-    { targetYr: FIRE_YR, label: 'FIRE — Ulrika 65 / Felipe 60', riktålder: false },
-    { targetYr: U_RIKT_YR, label: 'Ulrika 68 — riktålder', riktålder: true },
-    { targetYr: F_RIKT_YR, label: 'Felipe 68 — riktålder', riktålder: true }
-  ];
-
-  const tbody = document.getElementById('ap-proj-body');
-  tbody.innerHTML = '';
-  apMilestones.forEach(function(m) {
-    const n = m.targetYr - thisYr;
-    if (n <= 0) return;
-    const ipBal = Math.round(projBal(ipBal0, ipTot, ipRate, n));
-    const ppBal = Math.round(projBal(ppBal0, ppTot, ppRate, n));
-    const tot   = ipBal + ppBal;
-    const isRikt = m.riktålder;
+  function projRow(targetYr, label, ipBal, ppBal, isRikt) {
+    const tot    = ipBal + ppBal;
     const månEst = isRikt ? fmt(Math.round(tot / DELNINGSTAL)) + ' kr *' : '—';
-    const rowBg  = isRikt ? 'background:' + (document.documentElement.getAttribute('data-theme') === 'light' ? '#f0fdf4' : '#0f2318') + ';' : '';
-    tbody.innerHTML += '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
-      '<td style="padding:7px 8px;color:' + (isRikt ? 'var(--green)' : 'var(--muted)') + ';font-weight:' + (isRikt ? '600' : '400') + ';">' + m.targetYr + ' — ' + m.label + '</td>' +
+    const rowBg  = isRikt ? 'background:#0f2318;' : '';
+    return '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
+      '<td style="padding:7px 8px;color:' + (isRikt ? 'var(--green)' : 'var(--muted)') + ';font-weight:' + (isRikt ? '600' : '400') + ';">' + targetYr + ' — ' + label + '</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--green);">' + fmt(ipBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--blue);">' + fmt(ppBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--text);font-weight:600;">' + fmt(tot) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--amber);font-weight:' + (isRikt ? '700' : '400') + ';">' + månEst + '</td>' +
       '</tr>';
+  }
+
+  const tbody = document.getElementById('ap-proj-body');
+  tbody.innerHTML = '';
+
+  // 2030 och 2035 — kombinerat Felipe + Ulrika
+  [{ yr: 2030, lbl: 'Ulrika 60 / Felipe 55' }, { yr: FIRE_YR, lbl: 'FIRE — Ulrika 65 / Felipe 60' }].forEach(function(m) {
+    const ny = m.yr - thisYr;
+    if (ny <= 0) return;
+    tbody.innerHTML += projRow(m.yr, m.lbl,
+      Math.round(projBal(ipF0, ipF, ipRate, ny) + projBal(ipU0, ipU, ipRate, ny)),
+      Math.round(projBal(ppF0, ppF, ppRate, ny) + projBal(ppU0, ppU, ppRate, ny)),
+      false);
   });
+
+  // 2038 — bara Ulrikas kapital
+  if (U_RIKT_YR > thisYr) {
+    const ny = U_RIKT_YR - thisYr;
+    tbody.innerHTML += projRow(U_RIKT_YR, 'Ulrika 68 — riktålder',
+      Math.round(projBal(ipU0, ipU, ipRate, ny)),
+      Math.round(projBal(ppU0, ppU, ppRate, ny)),
+      true);
+  }
+
+  // 2043 — bara Felipes kapital
+  if (F_RIKT_YR > thisYr) {
+    const ny = F_RIKT_YR - thisYr;
+    tbody.innerHTML += projRow(F_RIKT_YR, 'Felipe 68 — riktålder',
+      Math.round(projBal(ipF0, ipF, ipRate, ny)),
+      Math.round(projBal(ppF0, ppF, ppRate, ny)),
+      true);
+  }
 
   // Lyssna på rate-inputs för live-uppdatering
   ['ap-ip-rate','ap-pp-rate'].forEach(function(id) {
