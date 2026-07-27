@@ -326,6 +326,75 @@
   <span class="est-label">kr/år</span>
 </div>
 
+<!-- Ombalansering -->
+<p class="section-title">Ombalansering — när och hur</p>
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
+  <div style="font-size:.8rem;color:var(--muted);margin-bottom:16px;">Innan FIRE behöver ni <strong style="color:var(--text)">inte</strong> aktivt flytta från hink 3 till hink 2 — det sker automatiskt:</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+    <div style="font-size:.82rem;display:flex;gap:10px;align-items:baseline;"><span style="color:var(--green);font-weight:700;flex-shrink:0;">→</span><span><strong style="color:var(--text)">Amortering</strong> <span style="color:var(--muted)">minskar bolånet och ökar fastighetsnettot i hink 2 automatiskt (+<span id="ob-amort">4 650</span> kr/mån)</span></span></div>
+    <div style="font-size:.82rem;display:flex;gap:10px;align-items:baseline;"><span style="color:var(--green);font-weight:700;flex-shrink:0;">→</span><span><strong style="color:var(--text)">TjP-insättningar</strong> <span style="color:var(--muted)">växer i hink 3 och konverteras automatiskt till pension (hink 2) vid uttag</span></span></div>
+    <div style="font-size:.82rem;display:flex;gap:10px;align-items:baseline;"><span style="color:var(--green);font-weight:700;flex-shrink:0;">→</span><span><strong style="color:var(--text)">Inkomstpensionen</strong> <span style="color:var(--muted)">växer via intjänade pensionsrätter varje år utan aktiva beslut</span></span></div>
+  </div>
+
+  <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px;">
+    <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:12px;">Inför och efter FIRE — tre regler</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="background:#6ee7b720;color:var(--green);border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:700;white-space:nowrap;flex-shrink:0;">Regel 1</div>
+        <div style="font-size:.82rem;">
+          <strong style="color:var(--text)">"5 år före"-regeln</strong>
+          <div style="color:var(--muted);margin-top:2px;">Börja gradvis sänka risken i hink 3 ca 5 år innan planerad FIRE. Flytta delar av Lysa till räntefonder/obligationer. Skyddar mot att marknaden kraschar precis när ni ska sluta jobba.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="background:#a78bfa20;color:var(--purple);border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:700;white-space:nowrap;flex-shrink:0;">Regel 2</div>
+        <div style="font-size:.82rem;">
+          <strong style="color:var(--text)">Årsregeln (under FIRE)</strong>
+          <div style="color:var(--muted);margin-top:2px;">En gång per år, efter ett bra börsjår — sälj ur hink 3 det ni behöver för nästa 1–2 år och flytta till hink 1 (Borgo Bank). Under dåliga år: lev på hink 1, sälj ingenting.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="background:#4f8ef720;color:var(--blue);border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:700;white-space:nowrap;flex-shrink:0;">Regel 3</div>
+        <div style="font-size:.82rem;">
+          <strong style="color:var(--text)">Sälj aldrig i nedgång</strong>
+          <div style="color:var(--muted);margin-top:2px;">Hela poängen med hinkar. Hink 1 ska räcka 3–6 månader (helst 1–2 år vid FIRE) så ni kan sitta still medan hink 3 återhämtar sig utan att tvinga fram förlustförsäljningar.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--border);padding-top:16px;">
+    <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px;">Tidslinje för er</div>
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+      <tr style="border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">Tidpunkt</th>
+        <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">Handling</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--green);font-weight:600;">Nu</td>
+        <td style="padding:7px 8px;color:var(--muted);">Inget aktivt — låt amortering + TjP sköta hink 2 automatiskt. Fokusera på att bygga bufferten.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--blue);font-weight:600;">~5 år före FIRE</td>
+        <td style="padding:7px 8px;color:var(--muted);">Sänk aktieandelen i Lysa stegvis (100% → 80% → 60% aktier). Öka andelen räntor.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 8px;color:var(--amber);font-weight:600;">Vid FIRE</td>
+        <td style="padding:7px 8px;color:var(--muted);">Bygg Borgo till 1–2 års levnadskostnader (<span id="ob-fire-buff">~780–1 560 kkr</span>) innan ni slutar jobba.</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 8px;color:var(--purple);font-weight:600;">Under FIRE</td>
+        <td style="padding:7px 8px;color:var(--muted);">Sälj ur Lysa/hink 3 varje höst om börsen är upp. Lev på hink 1 under dåliga år.</td>
+      </tr>
+    </table>
+  </div>
+</div>
+<div style="font-size:.75rem;color:var(--muted);margin-bottom:36px;padding:0 4px;">Källa: Rika Tillsammans — Fyra Hinkar-modellen &amp; hinkstrategi vid FIRE</div>
+
 <!-- Reflektionsfrågor -->
 <p class="section-title">Reflektionsfrågor (från Rika Tillsammans)</p>
 <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:36px;">
@@ -684,6 +753,12 @@ function render() {
     : 'öppna ekonomi.html och spara för att synka';
   el('sync-ts').textContent    = tsText;
   el('footer-ts').textContent  = savedAt ? 'Data från ' + tsText : 'Ej synkat med ekonomi.html';
+
+  // Ombalansering — dynamiska värden
+  el('ob-amort').textContent = fmt(amort);
+  const fireBuff1 = Math.round(levnadskostnad * 12 / 1000);
+  const fireBuff2 = Math.round(levnadskostnad * 24 / 1000);
+  el('ob-fire-buff').textContent = '~' + fireBuff1 + '–' + fireBuff2 + ' kkr';
 }
 
 render();
