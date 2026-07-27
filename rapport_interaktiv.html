@@ -682,6 +682,19 @@
 })();
 </script>
 
+<!-- Scenarjämförelse -->
+<section>
+  <h2>Scenarjämförelse — FIRE 2035 vs 2037</h2>
+  <p style="color:var(--muted);margin-bottom:16px;font-size:.9rem;">
+    Dag 1-inkomst vid respektive FIRE-datum.
+    Ulrikas Norska TjP startar 2032 (ålder 62); Felipes Norska TjP startar 2037 (ålder 62).
+  </p>
+  <div class="grid grid-2">
+    <div class="card" id="scen-2035-card" style="padding:16px;"></div>
+    <div class="card" id="scen-2037-card" style="padding:16px;"></div>
+  </div>
+</section>
+
 <!-- FIRE-tabell -->
 <section>
   <h2>FIRE-färdplan — fas för fas</h2>
@@ -1434,6 +1447,88 @@ function recalculate() {
   const buffertFv = fvMap['Buffert Lysa (Ulrika)'] || 0;
   simIndivid(grp_fonder_f + buffertFv / 2, pensionFelipeVidAr, expF, expF2, 'uttakChartF', 'uttag-desc-f', 'rgba(79,142,247,1)');
   simIndivid(grp_fonder_u - buffertFv / 2, pensionUlrikaVidAr, expU, expU2, 'uttakChartU', 'uttag-desc-u', 'rgba(167,139,250,1)');
+
+  // ── Scenarjämförelse 2035 vs 2037 ─────────────────────────────────────────
+  (function() {
+    const SCEN_EXP = expense;
+    const HINK1    = 2 * SCEN_EXP * 12;
+
+    function scenCard(elId, yr, ageF, ageU, uInc, fInc) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const tot = uInc + fInc;
+      const gap = Math.max(0, SCEN_EXP - tot);
+      const runway = gap > 0 ? Math.round(HINK1 / gap) : null;
+      const runwayStr = gap > 0
+        ? `${runway} mån ≈ ${(runway/12).toFixed(1)} år`
+        : '∞ — självfinansierande';
+
+      let nextLabel = '';
+      if (yr === 2035) {
+        const fNorskInc = Math.round(f_norsk_tjp * skattFaktor);
+        nextLabel = `2037 — Felipe Norsk TjP +${fmtKr(fNorskInc)}/mån`;
+      } else {
+        const uAlmInc = Math.round((u_allman_sv + u_allman_no) * skattFaktor);
+        nextLabel = `2038 — Ulrika Allmänpension +${fmtKr(uAlmInc)}/mån`;
+      }
+
+      el.innerHTML = `
+        <h3 style="margin:0 0 14px;font-size:1.05rem;border-bottom:1px solid var(--border);padding-bottom:8px;">
+          FIRE ${yr}
+          &ensp;<span style="color:#6ee7b7;font-weight:700;">F:${ageF}</span>
+          <span style="color:var(--muted);font-size:.8rem;"> / </span>
+          <span style="color:#a78bfa;font-weight:700;">U:${ageU}</span>
+        </h3>
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:5px 0;color:#a78bfa;">Ulrika</td>
+            <td style="text-align:right;color:#a78bfa;font-weight:600;">${fmtKr(Math.round(uInc))}</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:5px 0;color:#6ee7b7;">Felipe</td>
+            <td style="text-align:right;color:#6ee7b7;font-weight:600;">${
+              fInc > 0 ? fmtKr(Math.round(fInc)) : '<span style="color:var(--muted)">—</span>'
+            }</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);font-weight:700;">
+            <td style="padding:5px 0;">Totalt/mån</td>
+            <td style="text-align:right;">${fmtKr(Math.round(tot))}</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:5px 0;color:var(--muted);">Levnadskostnad/mån</td>
+            <td style="text-align:right;color:var(--muted);">${fmtKr(Math.round(SCEN_EXP))}</td>
+          </tr>
+          <tr style="font-weight:600;">
+            <td style="padding:5px 0;">GAP/mån</td>
+            <td style="text-align:right;color:${gap > 0 ? '#f87171' : '#6ee7b7'};">
+              ${gap > 0 ? '-' + fmtKr(Math.round(gap)) : '+' + fmtKr(Math.round(-gap))}
+            </td>
+          </tr>
+        </table>
+        <div style="margin:12px 0 0;padding:8px 10px;border-radius:6px;background:${gap>0?'rgba(239,68,68,.08)':'rgba(110,231,183,.08)'};border:1px solid ${gap>0?'#f87171':'#6ee7b7'};font-size:.82rem;">
+          <div style="color:${gap>0?'#f87171':'#6ee7b7'};font-weight:600;margin-bottom:4px;">
+            ${gap > 0
+              ? 'Uttag från hink 3→1: ' + fmtKr(Math.round(gap * 12)) + '/år'
+              : '✓ Självfinansierande dag 1'
+            }
+          </div>
+          <div style="color:var(--muted);">Hink 1 (2×exp = ${fmtKr(Math.round(HINK1))}): ${runwayStr}</div>
+          <div style="color:#f59e0b;margin-top:4px;">→ ${nextLabel}</div>
+        </div>`;
+    }
+
+    // FIRE 2035 — Ulrika 65 / Felipe 60
+    // Ulrika: Norsk TjP (aktiv sedan 2032) + Svensk TjP (startar vid FIRE)
+    // Felipe: inget — Norsk TjP startar 2037 (ålder 62)
+    scenCard('scen-2035-card', 2035, 60, 65,
+      (u_norsk_tjp + u_svensk_tjp) * skattFaktor, 0);
+
+    // FIRE 2037 — Ulrika 67 / Felipe 62
+    // Ulrika: Norsk TjP + Svensk TjP; Felipe: Norsk TjP startar exakt vid 62 (2037)
+    scenCard('scen-2037-card', 2037, 62, 67,
+      (u_norsk_tjp + u_svensk_tjp) * skattFaktor,
+      f_norsk_tjp * skattFaktor);
+  })();
 }
 
 // ── Event-lyssnare ────────────────────────────────────────────────────────
