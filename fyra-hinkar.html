@@ -389,8 +389,8 @@
     <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
       <thead>
         <tr style="border-bottom:1px solid var(--border);">
-          <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">År</th>
-          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">IP balance</th>
+          <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600;">Milstolpe</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Inkomstpension</th>
           <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">PP balance</th>
           <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600;">Totalt</th>
         </tr>
@@ -865,16 +865,21 @@ function render() {
   const ppRate   = (parseFloat(document.getElementById('ap-pp-rate').value) || 8) / 100;
   const ipBal0   = ek('bal_ap_f',0) + ek('bal_ap_u',0);
   const ppBal0   = ek('bal_pp_f',0) + ek('bal_pp_u',0);
-  const years    = [5, 10, 15, 20];
+  const apMilestones = [
+    { targetYr: 2030, label: 'Ulrika 60 / Felipe 55' },
+    { targetYr: 2035, label: 'Ulrika 65 (pension) / Felipe 60' }
+  ];
+  const thisYr   = new Date().getFullYear();
   const tbody    = document.getElementById('ap-proj-body');
   tbody.innerHTML = '';
-  years.forEach(function(n) {
+  apMilestones.forEach(function(m) {
+    const n = m.targetYr - thisYr;
+    if (n <= 0) return;
     const ipBal = Math.round(ipBal0 * Math.pow(1 + ipRate, n) + ipTot * (Math.pow(1 + ipRate, n) - 1) / ipRate);
     const ppBal = Math.round(ppBal0 * Math.pow(1 + ppRate, n) + ppTot * (Math.pow(1 + ppRate, n) - 1) / ppRate);
     const tot   = ipBal + ppBal;
-    const yr    = new Date().getFullYear() + n;
     tbody.innerHTML += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:7px 8px;color:var(--muted);">' + yr + ' (+' + n + ' år)</td>' +
+      '<td style="padding:7px 8px;color:var(--muted);">' + m.targetYr + ' — ' + m.label + '</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--green);">' + fmt(ipBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--blue);">' + fmt(ppBal) + ' kr</td>' +
       '<td style="padding:7px 8px;text-align:right;color:var(--text);font-weight:600;">' + fmt(tot) + ' kr</td>' +

@@ -419,7 +419,7 @@
     <div class="card kpi kpi-cyan">
       <div class="label">Inkomstpension SE</div>
       <div class="value" id="kpi-ap-fv">—</div>
-      <div class="sub">Felipe + Ulrika (dagsvärde)</div>
+      <div class="sub">Felipe + Ulrika (proj. 3% + avsättningar)</div>
     </div>
     <div class="card kpi kpi-cyan">
       <div class="label">Pension NAV (NO)</div>
@@ -606,12 +606,18 @@
     var ipTot  = ipF + ipU, ppTot = ppF + ppU;
     var tbody  = document.getElementById('ri-proj-body');
     tbody.innerHTML = '';
-    [5, 10, 15, 20].forEach(function(yr) {
-      var ipB = Math.round(ipBal0 * Math.pow(1+ipRate,yr) + ipTot*(Math.pow(1+ipRate,yr)-1)/ipRate);
-      var ppB = Math.round(ppBal0 * Math.pow(1+ppRate,yr) + ppTot*(Math.pow(1+ppRate,yr)-1)/ppRate);
+    var thisYear = new Date().getFullYear();
+    var milestones = [
+      { yr: 2030, label: 'Ulrika 60 / Felipe 55' },
+      { yr: 2035, label: 'Ulrika 65 (pension) / Felipe 60' }
+    ];
+    milestones.forEach(function(m) {
+      var n_yr = m.yr - thisYear;
+      if (n_yr <= 0) return;
+      var ipB = Math.round(ipBal0 * Math.pow(1+ipRate,n_yr) + ipTot*(Math.pow(1+ipRate,n_yr)-1)/ipRate);
+      var ppB = Math.round(ppBal0 * Math.pow(1+ppRate,n_yr) + ppTot*(Math.pow(1+ppRate,n_yr)-1)/ppRate);
       var tot = ipB + ppB;
-      var year = new Date().getFullYear() + yr;
-      tbody.innerHTML += '<tr><td>' + year + ' (+' + yr + ' år)</td>' +
+      tbody.innerHTML += '<tr><td>' + m.yr + ' — ' + m.label + '</td>' +
         '<td class="num pos">' + n(ipB) + ' kr</td>' +
         '<td class="num">' + n(ppB) + ' kr</td>' +
         '<td class="num">' + n(tot) + ' kr</td></tr>';
@@ -771,6 +777,18 @@ function recalculate() {
   const ap_nu_sum  = ap_f_val + ap_u_val;
   const nav_nu_sum = (nav_f_nok + nav_u_nok) * nok_sek_rate;
 
+  // Inkomstpension projiceras med inkomstindex (3 %) + nya avsättningar (16 % av PGI)
+  // Täker: till Ulrika 65 år (2035), dvs ca 9 år
+  const AP_INDEX_RATE = 0.03;
+  const AP_IBB = 77400, AP_TAK = 7.5 * AP_IBB;
+  const ap_brutto_f = (parseFloat(localStorage.getItem('ek_brutto_f')) || 67300) * 12;
+  const ap_brutto_u = (parseFloat(localStorage.getItem('ek_brutto_u')) || 35500) * 12;
+  const ap_pgi_f = Math.min(ap_brutto_f, AP_TAK);
+  const ap_pgi_u = Math.min(ap_brutto_u, AP_TAK);
+  const ap_annual_new = ap_pgi_f * 0.16 + ap_pgi_u * 0.16;
+  const ap_fv_sum = ap_nu_sum * Math.pow(1 + AP_INDEX_RATE, antalAr)
+                  + ap_annual_new * (Math.pow(1 + AP_INDEX_RATE, antalAr) - 1) / AP_INDEX_RATE;
+
   // Uppdatera labels
   document.getElementById('val-avk').textContent    = avkAr;
   document.getElementById('val-ar').textContent     = antalAr;
@@ -835,7 +853,7 @@ function recalculate() {
   const fonder_fv  = Math.max(0, grp_fonder_f + grp_fonder_u - engFonderJustering);
   const tjp_fv     = grp_tjp_f + grp_lonevxl + grp_tjp_u;
   const norge_fv   = grp_norge_f  + grp_norge_u;
-  const totalt_fv  = fonder_fv + tjp_fv + norge_fv + pp_fv_sum + ap_nu_sum + nav_nu_sum + sparkonto_fv;
+  const totalt_fv  = fonder_fv + tjp_fv + norge_fv + pp_fv_sum + ap_fv_sum + nav_nu_sum + sparkonto_fv;
 
   // Dagens summor via pvMap
   const fonder_nu_sum   = sumGrupp('Privata fonder (Felipe)', pvMap) + sumGrupp('Privata fonder (Ulrika)', pvMap);
@@ -865,7 +883,7 @@ function recalculate() {
   document.getElementById('kpi-tjp-u-fv').textContent    = fmtKr(grp_tjp_u);
   document.getElementById('kpi-norge-fv').textContent    = fmtKr(norge_fv);
   document.getElementById('kpi-pp-fv').textContent      = fmtKr(pp_fv_sum);
-  document.getElementById('kpi-ap-fv').textContent      = fmtKr(ap_nu_sum);
+  document.getElementById('kpi-ap-fv').textContent      = fmtKr(ap_fv_sum);
   document.getElementById('kpi-nav-fv').textContent     = fmtKr(nav_nu_sum);
   document.getElementById('kpi-borgo-fv').textContent   = fmtKr(sparkonto_fv);
   document.getElementById('kpi-borgo-fv-sub').textContent = BORGO_RANTA.toFixed(1) + '% ränta + ' + Math.round(sparkonto_pmt).toLocaleString('sv-SE') + ' kr/mån';
@@ -892,7 +910,7 @@ function recalculate() {
     type:'doughnut',
     data:{
       labels:['Privata fonder','Aktier (dagsvärde)','TjP Felipe','LöneVXL Felipe','TjP Ulrika','TjP Norge','Premiepension (AP7)','Inkomstpension SE','NAV (NO)'],
-      datasets:[{ data:[fonder_fv,aktierVal,grp_tjp_f,grp_lonevxl,grp_tjp_u,norge_fv,pp_fv_sum,ap_nu_sum,nav_nu_sum], backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'#1a1d27' }]
+      datasets:[{ data:[fonder_fv,aktierVal,grp_tjp_f,grp_lonevxl,grp_tjp_u,norge_fv,pp_fv_sum,ap_fv_sum,nav_nu_sum], backgroundColor:PIE_COLORS, borderWidth:2, borderColor:'#1a1d27' }]
     },
     options:{ plugins:{ legend:{ labels:{ color:'#e2e8f0', boxWidth:12 } } }, cutout:'60%' }
   });
