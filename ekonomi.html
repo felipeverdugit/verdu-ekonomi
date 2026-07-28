@@ -650,7 +650,7 @@ async function loadFromSheet() {
       // Sheet är tomt — pusha lokal data dit
       await pushToSheet();
     } else {
-      sheetKeys.forEach(key => localStorage.setItem(key, data[key]));
+      sheetKeys.filter(k => k !== 'ek_historik').forEach(key => localStorage.setItem(key, data[key]));
       loadAll();
       recalculate();
       setSyncStatus('Synkat ' + new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}), 'var(--green)');
@@ -672,7 +672,7 @@ async function pushToSheet() {
   const data = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.startsWith('ek_')) data[key] = localStorage.getItem(key);
+    if (key && key.startsWith('ek_') && key !== 'ek_historik') data[key] = localStorage.getItem(key);
   }
   try {
     const encoded = encodeURIComponent(JSON.stringify(data));

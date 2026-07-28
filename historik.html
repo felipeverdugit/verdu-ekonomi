@@ -88,6 +88,7 @@
 
 <section>
   <button class="btn btn-green" onclick="saveSnapshot()">+ Spara snapshot idag</button>
+  <button class="btn" onclick="exportHistory()" style="margin-left:12px;">⬇ Exportera JSON</button>
   <span id="save-msg" style="color:var(--green);margin-left:16px;font-size:.85rem;"></span>
 </section>
 
@@ -174,6 +175,15 @@ function deleteSnapshot(i) {
   render(hist);
 }
 
+function exportHistory() {
+  const hist = load();
+  const blob = new Blob([JSON.stringify(hist, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'historik-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
 function load() {
   try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
 }
@@ -236,7 +246,7 @@ function render(hist) {
 // Seed historiska snapshots om de saknas
 (function() {
   const existing = load();
-  const seedDates = ['2026-06-20','2026-06-30','2026-07-05','2026-07-16'];
+  const seedDates = ['2026-06-20','2026-06-30','2026-07-05','2026-07-16','2026-07-18','2026-07-28'];
   const hasSeed = seedDates.every(d => existing.some(e => e.date === d));
   if (!hasSeed) {
     const seed = [
@@ -244,6 +254,8 @@ function render(hist) {
       {"date":"2026-06-30","fonder":864894,"tjp":1120827,"norge":1607916,"allman":6538328,"aktier":849615,"totalt":10981580},
       {"date":"2026-07-05","fonder":865594,"tjp":1120827,"norge":1589199,"allman":6538328,"aktier":904104,"totalt":11018052},
       {"date":"2026-07-16","fonder":1038372,"tjp":1142699,"norge":1595079,"allman":6533081,"aktier":873961,"totalt":11183192},
+      {"date":"2026-07-18","fonder":1038372,"tjp":1142699,"norge":1595079,"allman":6533081,"aktier":878687,"totalt":11187918},
+      {"date":"2026-07-28","fonder":1087268,"tjp":1142699,"norge":1595079,"allman":6533081,"aktier":874857,"totalt":11232984},
     ];
     const merged = [...seed.filter(s => !existing.some(e => e.date === s.date)), ...existing];
     merged.sort((a,b) => a.date.localeCompare(b.date));
@@ -261,7 +273,7 @@ const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbL
     const resp = await fetch(SYNC_URL + '?action=read');
     const data = await resp.json();
     Object.entries(data).forEach(([key, val]) => {
-      if (key.startsWith('ek_')) localStorage.setItem(key, val);
+      if (key.startsWith('ek_') && key !== 'ek_historik') localStorage.setItem(key, val);
     });
   } catch(e) { console.warn('Sheet sync misslyckades', e); }
 })();
