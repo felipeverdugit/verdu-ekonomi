@@ -112,14 +112,37 @@
       </div>
     </div>
     <div class="hink-purpose">Kortsiktig trygghet — snabb tillgång, inga svängningar.</div>
+
+    <!-- Primär buffert -->
+    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;">Primär buffert — riskfritt</div>
     <div class="items">
       <div class="item"><span class="name">Borgo Bank (sparkonto)</span><span class="amount" style="color:var(--blue)" id="h1-borgo">—</span></div>
     </div>
     <div>
-      <div class="hink-total-label">Totalt buffert</div>
+      <div class="hink-total-label">Totalt primär</div>
       <div class="hink-total" style="color:var(--blue)" id="h1-total">—</div>
       <div style="margin-top:8px;" id="h1-badge-wrap"><span class="status-badge badge-alert" id="h1-badge">⚠ Kritiskt underfunderad</span></div>
       <div style="font-size:.75rem;color:var(--muted);margin-top:6px;" id="h1-note">Mål: — kr</div>
+    </div>
+
+    <!-- Sekundär buffert — kreditkort -->
+    <div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:14px;">
+      <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Sekundär buffert — kreditkort</div>
+      <div class="items">
+        <div class="item"><span class="name">MC — LF (#1)</span><span class="amount" style="color:#8892a4;" id="h1-k-lf1">—</span></div>
+        <div class="item"><span class="name">MC — DNB</span><span class="amount" style="color:#8892a4;" id="h1-k-dnb">—</span></div>
+        <div class="item"><span class="name">MC — LF (#2)</span><span class="amount" style="color:#8892a4;" id="h1-k-lf2">—</span></div>
+        <div class="item"><span class="name">VISA — Norwegian</span><span class="amount" style="color:#8892a4;" id="h1-k-norweg">—</span></div>
+      </div>
+      <div style="margin-top:8px;">
+        <div style="font-size:.72rem;color:var(--muted);">Totalt kredit</div>
+        <div style="font-size:1.1rem;font-weight:700;color:#8892a4;" id="h1-kredit-total">—</div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;border-radius:6px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);">
+        <div style="font-size:.7rem;color:var(--muted);">Total likviditet (primär + kredit)</div>
+        <div style="font-size:1.15rem;font-weight:800;color:var(--blue);" id="h1-likviditet-total">—</div>
+        <div style="font-size:.72rem;margin-top:2px;" id="h1-likviditet-note">—</div>
+      </div>
     </div>
   </div>
 
@@ -608,7 +631,14 @@ function render() {
   el('kpi-lek-tot').textContent    = fmt(hink4);
   el('kpi-lek-sub').textContent    = hink3 > 0 ? pct(lekPct) + ' av hink 3' : 'av hink 3';
 
-  // Hink 1
+  // Hink 1 — primär + sekundär buffert
+  const kLf1    = ek('kredit_lf1', 70000);
+  const kDnb    = ek('kredit_dnb', 150000);
+  const kLf2    = ek('kredit_lf2', 30000);
+  const kNorweg = ek('kredit_norweg', 150000);
+  const kreditTot  = kLf1 + kDnb + kLf2 + kNorweg;
+  const likvidTot  = borgo + kreditTot;
+
   el('h1-borgo').textContent = fmt(borgo);
   el('h1-total').textContent = fmt(borgo);
   if (borgo >= buffMin) {
@@ -624,6 +654,17 @@ function render() {
   el('h1-note').textContent = monthly > 0
     ? 'Mål: ' + fmt(buffMin) + '–' + fmt(buffMax)
     : 'Mål: 111 000–222 000 kr';
+
+  el('h1-k-lf1').textContent    = fmt(kLf1);
+  el('h1-k-dnb').textContent    = fmt(kDnb);
+  el('h1-k-lf2').textContent    = fmt(kLf2);
+  el('h1-k-norweg').textContent = fmt(kNorweg);
+  el('h1-kredit-total').textContent   = fmt(kreditTot);
+  el('h1-likviditet-total').textContent = fmt(likvidTot);
+  const likvidMon = monthly > 0 ? (likvidTot / monthly).toFixed(1) : '—';
+  el('h1-likviditet-note').textContent = monthly > 0
+    ? likvidMon + ' månaders utgifter inkl. kredit'
+    : 'Ange månadsutgifter för beräkning';
 
   // Hink 2
   el('h2-ip').textContent    = fmtK(ip);
@@ -665,10 +706,10 @@ function render() {
   // Findings
   if (borgo >= buffMin) {
     el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--green)';
-    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') täcker ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter — <strong>OK!</strong>';
+    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') täcker ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter — <strong>OK!</strong> Med kreditkort tillkommer ' + fmt(kreditTot) + ' i reserv (' + likvidMon + ' mån totalt).';
   } else {
     el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--red)';
-    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') — knappt ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter. Ni behöver <strong>' + fmt(buffMin) + '–' + fmt(buffMax) + '</strong> på ett riskfritt bankkonto.';
+    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') — ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter. Mål: <strong>' + fmt(buffMin) + '–' + fmt(buffMax) + '</strong>. Sekundär reserv via kreditkort: ' + fmt(kreditTot) + ' (' + likvidMon + ' mån totalt inkl. kredit).';
   }
 
   if (lekPct <= 10) {
