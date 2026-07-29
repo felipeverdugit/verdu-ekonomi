@@ -622,8 +622,8 @@ function render() {
     el('h1-badge').textContent = '⚠ Kritiskt underfunderad';
   }
   el('h1-note').textContent = monthly > 0
-    ? 'Buffert Lysa är en fond → hink 3. Mål: ' + fmt(buffMin) + '–' + fmt(buffMax)
-    : 'Buffert Lysa är en fond → hink 3. Mål: 111 000–222 000 kr';
+    ? 'Mål: ' + fmt(buffMin) + '–' + fmt(buffMax)
+    : 'Mål: 111 000–222 000 kr';
 
   // Hink 2
   el('h2-ip').textContent    = fmtK(ip);
@@ -665,10 +665,10 @@ function render() {
   // Findings
   if (borgo >= buffMin) {
     el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--green)';
-    el('txt-buffert').innerHTML = 'Buffert Lysa är en fond och hör till hink 3. Borgo Bank (' + fmt(borgo) + ') täcker ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter — <strong>OK!</strong>';
+    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') täcker ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter — <strong>OK!</strong>';
   } else {
     el('finding-buffert').querySelector('.finding-dot').style.background = 'var(--red)';
-    el('txt-buffert').innerHTML = 'Buffert Lysa är en fond och hör till hink 3. Kvar i hink 1 är bara Borgo Bank (' + fmt(borgo) + ') — knappt ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter. Ni behöver <strong>' + fmt(buffMin) + '–' + fmt(buffMax) + '</strong> på ett riskfritt bankkonto.';
+    el('txt-buffert').innerHTML = 'Borgo Bank (' + fmt(borgo) + ') — knappt ' + (monthly > 0 ? (borgo/monthly).toFixed(1) : '—') + ' månaders utgifter. Ni behöver <strong>' + fmt(buffMin) + '–' + fmt(buffMax) + '</strong> på ett riskfritt bankkonto.';
   }
 
   if (lekPct <= 10) {
