@@ -418,29 +418,29 @@ function init() {
     document.getElementById('lbl-monthly').textContent = fmt(monthly);
   }
 
-  // Ladda pensionsbelopp — FIRE-rapport (rap_utk_*) prioriteras, annars manuellt sparade (utk_p*)
-  [1,2,3,4,5,6].forEach(i => {
-    const arRap  = localStorage.getItem('rap_utk_p' + i + '_ar');
-    const belRap = localStorage.getItem('rap_utk_p' + i + '_bel');
-    const arMan  = localStorage.getItem('utk_p' + i + '_ar');
-    const belMan = localStorage.getItem('utk_p' + i + '_bel');
-    const ar  = arMan  || arRap;
-    const bel = belMan || belRap;
-    if (ar)  document.getElementById('p' + i + '-ar').value  = ar;
-    if (bel) document.getElementById('p' + i + '-bel').value = bel;
+  // Ladda pensionsbelopp alltid från FIRE-rapport (rap_utk_*) — FIRE-rapport är källan
+  function loadPensions() {
+    [1,2,3,4,5,6].forEach(i => {
+      const ar  = localStorage.getItem('rap_utk_p' + i + '_ar');
+      const bel = localStorage.getItem('rap_utk_p' + i + '_bel');
+      if (ar)  document.getElementById('p' + i + '-ar').value  = ar;
+      if (bel) document.getElementById('p' + i + '-bel').value = bel;
+    });
+  }
+  loadPensions();
+
+  // Auto-uppdatera om FIRE-rapporten ändras i en annan flik
+  window.addEventListener('storage', e => {
+    if (e.key && e.key.startsWith('rap_utk_')) { loadPensions(); recalc(); }
   });
 
-  // Listen for changes — pension fields also persist to localStorage
+  // Lyssna på ändringar
   ['inp-kapital','inp-avkastning','inp-startar','slider-uttag'].forEach(id =>
     document.getElementById(id).addEventListener('input', recalc));
 
   [1,2,3,4,5,6].forEach(i => {
     ['ar','bel'].forEach(field => {
-      const el = document.getElementById('p' + i + '-' + field);
-      el.addEventListener('input', () => {
-        localStorage.setItem('utk_p' + i + '_' + field, el.value);
-        recalc();
-      });
+      document.getElementById('p' + i + '-' + field).addEventListener('input', recalc);
     });
   });
 

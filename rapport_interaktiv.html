@@ -1655,12 +1655,13 @@ function recalculate() {
 }
 
 // ── Event-lyssnare ────────────────────────────────────────────────────────
-['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta',
- 'slider-lonehoj-f','slider-lonehoj-u','slider-sparandel'].forEach(id => {
+const PERSISTED_SLIDERS = ['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta',
+ 'slider-lonehoj-f','slider-lonehoj-u','slider-sparandel'];
+PERSISTED_SLIDERS.forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('input', function() {
-    // Uppdatera display-span om det finns
+    localStorage.setItem('rap_sl_' + id, this.value);
     const displayId = id.replace('slider-','val-');
     const disp = document.getElementById(displayId);
     if (disp) disp.textContent = this.value;
@@ -1749,6 +1750,17 @@ async function loadFromSheet() {
   const lvxl = localStorage.getItem('rap_lonevxl_pmt');
   if (lvxl) document.getElementById('input-lonevxl-pmt').value = lvxl;
 })();
+
+// Återläs sparade slider-värden innan första recalculate()
+PERSISTED_SLIDERS.forEach(id => {
+  const saved = localStorage.getItem('rap_sl_' + id);
+  if (!saved) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = saved;
+  const disp = document.getElementById(id.replace('slider-','val-'));
+  if (disp) disp.textContent = saved;
+});
 
 // Kör direkt vid laddning
 recalculate();
