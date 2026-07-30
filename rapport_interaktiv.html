@@ -1142,6 +1142,24 @@ function recalculate() {
   const YR_U_ALLMAN    = ULRIKA_FODELSEAR + uAllmanAlder;
   const YR_F_ALLMAN_SE = FELIPE_FODELSEAR + fAllmanAlder;
 
+  // ── Exportera pensionsflöden till uttags-kalkylator ──────────────────────
+  // P1: TjP Ulrika (Svensk kommunal)
+  localStorage.setItem('rap_utk_p1_ar',  u_tjp_start_yr);
+  localStorage.setItem('rap_utk_p1_bel', Math.round(u_svensk_tjp * skattFaktor));
+  // P2: TjP Felipe (Svensk kommunal)
+  localStorage.setItem('rap_utk_p2_ar',  f_tjp_start_yr);
+  localStorage.setItem('rap_utk_p2_bel', Math.round(f_svensk_tjp * skattFaktor));
+  // P3: Allmänpension SE (båda, från det år den sist av dem börjar)
+  localStorage.setItem('rap_utk_p3_ar',  Math.max(YR_U_ALLMAN, YR_F_ALLMAN_SE));
+  localStorage.setItem('rap_utk_p3_bel', Math.round((f_allman + u_allman_sv) * skattFaktor));
+  // P4: Norsk TjP + NAV (från det år den sist av dem börjar ta ut)
+  const YR_NORSK_SAMORDNAD = Math.max(YR_F_NORSK_TJP, YR_U_NORSK_TJP);
+  localStorage.setItem('rap_utk_p4_ar',  YR_NORSK_SAMORDNAD);
+  localStorage.setItem('rap_utk_p4_bel', Math.round((f_norsk_tjp + u_norsk_tjp + PENSION.norsk_felipe_sum + PENSION.norsk_ulrika_sum) * skattFaktor));
+  // P5: Förbestämt TjP (Alecta/KPA/Kåpan)
+  localStorage.setItem('rap_utk_p5_ar',  YR_F_FAST_TJP);
+  localStorage.setItem('rap_utk_p5_bel', Math.round(F_FAST_TJP * skattFaktor));
+
   // Alla möjliga pensionshändelser med sina startår
   // Hjälpfunktion — visar faktisk ålder vid uttag (aldrig lägre än planerad ålder)
   function actualAge(plannedYr, birthYr) {

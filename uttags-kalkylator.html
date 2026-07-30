@@ -413,12 +413,16 @@ function init() {
     document.getElementById('lbl-monthly').textContent = fmt(monthly);
   }
 
-  // Load saved pension values
+  // Ladda pensionsbelopp — FIRE-rapport (rap_utk_*) prioriteras, annars manuellt sparade (utk_p*)
   [1,2,3,4,5].forEach(i => {
-    const arSaved  = localStorage.getItem('utk_p' + i + '_ar');
-    const belSaved = localStorage.getItem('utk_p' + i + '_bel');
-    if (arSaved)  document.getElementById('p' + i + '-ar').value  = arSaved;
-    if (belSaved) document.getElementById('p' + i + '-bel').value = belSaved;
+    const arRap  = localStorage.getItem('rap_utk_p' + i + '_ar');
+    const belRap = localStorage.getItem('rap_utk_p' + i + '_bel');
+    const arMan  = localStorage.getItem('utk_p' + i + '_ar');
+    const belMan = localStorage.getItem('utk_p' + i + '_bel');
+    const ar  = arMan  || arRap;
+    const bel = belMan || belRap;
+    if (ar)  document.getElementById('p' + i + '-ar').value  = ar;
+    if (bel) document.getElementById('p' + i + '-bel').value = bel;
   });
 
   // Listen for changes — pension fields also persist to localStorage
