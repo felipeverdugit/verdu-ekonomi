@@ -1152,7 +1152,7 @@ function recalculate() {
   // ── Exportera till uttags-kalkylator ──
   localStorage.setItem('rap_uttavk',   uttAvkAr);
   localStorage.setItem('rap_fireYear', fireYear);
-  localStorage.setItem('rap_kapital',  Math.round(fireKapital));
+  localStorage.setItem('rap_kapital',  Math.round(fonder_fv + sparkonto_fv + (aktierIFire ? aktierVal : 0)));
   // Pensionsflöden (7 rader, kronologisk ordning)
   // P1: Norsk TjP Ulrika (OTP, 62→77 år — tidsbegränsad)
   localStorage.setItem('rap_utk_p1_ar',  YR_U_NORSK_TJP);
