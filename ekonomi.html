@@ -247,6 +247,14 @@
       <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-ovriga" style="color:#fb923c;">—</span></div>
     </div>
 
+    <div class="card" style="border-left-color:#818cf8;">
+      <div class="card-title" style="color:#818cf8;">Prenumerationer / mån <span style="font-weight:400;font-size:.75rem;color:var(--muted);">(via MC Felipe)</span></div>
+      <div class="row"><span class="lbl">Nextory</span><input type="number" data-key="ut_nextory" value="269" step="10"></div>
+      <div class="row"><span class="lbl">Anthropic (Claude)</span><input type="number" data-key="ut_claude" value="253" step="10"></div>
+      <div class="row"><span class="lbl">Spotify</span><input type="number" data-key="ut_spotify" value="219" step="10"></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-prenumerationer" style="color:#818cf8;">—</span></div>
+    </div>
+
     <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;">
       <div class="card-title" style="color:var(--muted);border:none;margin:0;padding:0;">Utgiftsfördelning</div>
       <div class="chart-wrap" style="width:100%;max-width:260px;">
@@ -357,7 +365,7 @@
       <div class="nk-row"><span style="color:var(--text);font-weight:700;">Årsresultat</span><span class="nk-highlight" id="nk-arsresultat">—</span></div>
       <div class="nk-row"><span>Sparkvot (exkl. pension)</span><span id="nk-sparkvot2">—</span></div>
       <div class="nk-row"><span>Pensionsavsättning/år <span style="font-size:.72rem;color:var(--muted);">(AP+VXL)</span></span><span id="nk-pension-avs">—</span></div>
-      <div class="nk-row"><span style="color:var(--green);font-weight:600;">Gör-livet-rikare/dag</span><span class="nk-highlight" style="color:var(--green);" id="nk-glr-dag">—</span></div>
+      <div class="nk-row"><span style="color:var(--green);font-weight:600;">Gör-livet-rikare/dag <span style="font-size:.7rem;color:var(--muted);font-weight:400;">(0,01% exkl. pension)</span></span><span class="nk-highlight" style="color:var(--green);" id="nk-glr-dag">—</span></div>
     </div>
 
     <!-- Kolumn 2: Balansräkning -->
@@ -543,8 +551,9 @@ function recalculate() {
   const spar      = v('spar_lysaf')+ v('spar_lysau')+ v('spar_buffert')+ v('spar_avanzaN')+ v('spar_borgo')+ v('ut_resor');
   localStorage.setItem('ek_spar_total', Math.round(spar));
   const ovriga    = v('ut_mc_f') + v('ut_mc_u');
+  const prenumer  = v('ut_nextory') + v('ut_claude') + v('ut_spotify');
 
-  const utTot  = boende + transport + telefoni + forsakr + ovrigt + spar + ovriga;
+  const utTot  = boende + transport + telefoni + forsakr + ovrigt + spar + ovriga + prenumer;
   const saldo  = inTot - utTot;
   const sparkvot = inTot > 0 ? Math.round(spar / inTot * 100) : 0;
 
@@ -605,6 +614,7 @@ function recalculate() {
   document.getElementById('tot-ovrigt').textContent    = fmt(ovrigt);
   document.getElementById('tot-spar').textContent      = fmt(spar);
   document.getElementById('tot-ovriga').textContent    = fmt(ovriga);
+  document.getElementById('tot-prenumerationer').textContent = fmt(prenumer);
 
   document.getElementById('tot-tillgangar').textContent = fmtM(tillgTot);
   document.getElementById('tot-skulder').textContent    = fmt(skulder);
@@ -615,9 +625,9 @@ function recalculate() {
   document.getElementById('kpi-netto').textContent = fmtM(netto);
 
   // ── Donut ────────────────────────────────────────────────────────────────
-  const donutData = [boende, transport, telefoni, forsakr, ovrigt, spar, ovriga];
-  const donutLabels = ['Boende','Transport','Telefoni','Försäkringar','Fack & Övrigt','Sparande','Övriga utgifter'];
-  const donutColors = ['#4f8ef7','#6ee7b7','#22d3ee','#f59e0b','#a78bfa','#f87171','#fb923c'];
+  const donutData = [boende, transport, telefoni, forsakr, ovrigt, spar, ovriga, prenumer];
+  const donutLabels = ['Boende','Transport','Telefoni','Försäkringar','Fack & Övrigt','Sparande','Övriga utgifter','Prenumerationer'];
+  const donutColors = ['#4f8ef7','#6ee7b7','#22d3ee','#f59e0b','#a78bfa','#f87171','#fb923c','#818cf8'];
 
   if (donut) {
     donut.data.datasets[0].data = donutData;
@@ -670,8 +680,10 @@ function recalculate() {
   const lonevxlAr = (parseFloat(localStorage.getItem('rap_lonevxl_pmt')) || 0) * 12;
   const pensAvs   = Math.round(apF + apU + lonevxlAr);
 
-  // Gör-livet-rikare/dag: dagligt kassaflöde (månadssaldo × 12 / 365)
-  const glrDag = Math.round(arsresultat / 365);
+  // Gör-livet-rikare/dag: 0,01%-regeln — 0,01% av förmögenheten exkl. pension per dag
+  // (pension = allmänpension IP/PP/NAV + TjP Sverige + TjP Norge)
+  const nettoExklPension = Math.max(0, netto - allman - tjp - norge);
+  const glrDag = Math.round(nettoExklPension * 0.0001);
 
   // Likvida tillgångar: privata fonder (Lysa etc.) + aktier (ej TjP/pension/fastighet)
   const likvida = fonder + aktier;
