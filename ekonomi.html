@@ -697,6 +697,9 @@ function recalculate() {
   const levnadskostnad = parseFloat(localStorage.getItem('rap_levnadskostnad')) || 65000;
   const fireNum  = levnadskostnad * 12 / 0.04;
   const firePct  = fireNum > 0 ? netto / fireNum * 100 : 0;
+  localStorage.setItem('ek_netto',    Math.round(netto));
+  localStorage.setItem('ek_fire_pct', firePct.toFixed(1));
+  localStorage.setItem('ek_glr_dag',  glrDag);
 
   // Fas på ekonomiska resan
   let fas;

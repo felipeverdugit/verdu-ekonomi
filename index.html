@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verdu Ekonomi</title>
+<style>
+  :root {
+    --bg:#0f1117; --card:#1a1d27; --card2:#21263a;
+    --text:#e2e8f0; --muted:#8892a4; --border:#2d3348;
+    --radius:14px;
+    --blue:#4f8ef7; --green:#6ee7b7; --cyan:#22d3ee;
+    --orange:#f59e0b; --purple:#a78bfa; --red:#f87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:24px; max-width:900px; margin:0 auto; }
+
+  /* Header */
+  .hero { text-align:center; padding:40px 0 32px; }
+  .hero h1 { font-size:2.4rem; font-weight:800; color:var(--blue); }
+  .hero .sub { color:var(--muted); font-size:.95rem; margin-top:6px; }
+
+  /* KPI-strip */
+  .kpi-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:36px; }
+  @media(max-width:600px) { .kpi-strip { grid-template-columns:repeat(2,1fr); } }
+  .kpi-box { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; }
+  .kpi-box .lbl { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+  .kpi-box .val { font-size:1.25rem; font-weight:800; }
+
+  /* Nav cards */
+  .nav-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  @media(max-width:600px) { .nav-grid { grid-template-columns:1fr; } }
+  .nav-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px 24px 20px; text-decoration:none; color:var(--text); display:block; transition:transform .15s, border-color .15s; }
+  .nav-card:hover { transform:translateY(-3px); border-color:var(--blue); }
+  .nav-card .icon { font-size:2rem; margin-bottom:12px; }
+  .nav-card .title { font-size:1.1rem; font-weight:700; margin-bottom:6px; }
+  .nav-card .desc { font-size:.82rem; color:var(--muted); line-height:1.5; }
+  .nav-card .arrow { float:right; color:var(--border); font-size:1.2rem; margin-top:-2px; transition:color .15s; }
+  .nav-card:hover .arrow { color:var(--blue); }
+
+  footer { color:var(--muted); font-size:.78rem; text-align:center; margin-top:48px; }
+</style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f1117;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border-radius:16px;padding:40px;width:320px;text-align:center;border:1px solid #2d3348;">
+    <div style="font-size:1.5rem;font-weight:700;color:#4f8ef7;margin-bottom:8px;">Verdu Ekonomi</div>
+    <div style="color:#8892a4;font-size:.9rem;margin-bottom:24px;">Ange lösenord för att fortsätta</div>
+    <input id="auth-pw" type="password" placeholder="Lösenord" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2d3348;background:#0f1117;color:#e2e8f0;font-size:1rem;margin-bottom:12px;outline:none;">
+    <button onclick="checkAuth()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#4f8ef7;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">Logga in</button>
+    <div id="auth-err" style="color:#f87171;margin-top:12px;font-size:.85rem;min-height:20px;"></div>
+  </div>
+</div>
+<script>
+  (function() {
+    if (sessionStorage.getItem('auth') === '1') document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkAuth(); });
+  })();
+  function checkAuth() {
+    if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+      loadKpis();
+    } else {
+      document.getElementById('auth-err').textContent = 'Fel lösenord';
+      document.getElementById('auth-pw').value = '';
+    }
+  }
+</script>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Verdu Ekonomi</h1>
+  <div class="sub" id="hero-date"></div>
+</div>
+
+<!-- KPI-strip -->
+<div class="kpi-strip">
+  <div class="kpi-box">
+    <div class="lbl">Nettoförmögenhet</div>
+    <div class="val" id="kpi-netto" style="color:var(--purple)">—</div>
+  </div>
+  <div class="kpi-box">
+    <div class="lbl">FIRE-progress</div>
+    <div class="val" id="kpi-fire" style="color:var(--green)">—</div>
+  </div>
+  <div class="kpi-box">
+    <div class="lbl">Utgifter / mån</div>
+    <div class="val" id="kpi-utgift" style="color:var(--blue)">—</div>
+  </div>
+  <div class="kpi-box">
+    <div class="lbl">Gör-livet-rikare / dag</div>
+    <div class="val" id="kpi-glr" style="color:var(--cyan)">—</div>
+  </div>
+</div>
+
+<!-- Nav cards -->
+<div class="nav-grid">
+  <a class="nav-card" href="ekonomi.html">
+    <div class="icon">📊</div>
+    <div class="title">Ekonomisk Översikt <span class="arrow">›</span></div>
+    <div class="desc">Inkomster, utgifter per kategori, förmögenhet, skulder och nyckeltal.</div>
+  </a>
+  <a class="nav-card" href="fyra-hinkar.html">
+    <div class="icon">🪣</div>
+    <div class="title">Fyra Hinkar <span class="arrow">›</span></div>
+    <div class="desc">Buffert, bevara, tillväxt och lek — balansera din förmögenhet rätt.</div>
+  </a>
+  <a class="nav-card" href="historik.html">
+    <div class="icon">📈</div>
+    <div class="title">Historik <span class="arrow">›</span></div>
+    <div class="desc">Förmögenhetsutveckling över tid — diagram och logg med snapshots.</div>
+  </a>
+  <a class="nav-card" href="rapport_interaktiv.html">
+    <div class="icon">🔥</div>
+    <div class="title">FIRE-rapport <span class="arrow">›</span></div>
+    <div class="desc">Scenarjämförelse 2035 vs 2037, pensionsflöden och FIRE-datum.</div>
+  </a>
+</div>
+
+<footer>Verdu Ekonomi &nbsp;·&nbsp; Data sparas lokalt i webbläsaren</footer>
+
+<script>
+function ek(key) { return parseFloat(localStorage.getItem('ek_' + key)) || 0; }
+function fmtM(n) { return (n/1e6).toFixed(2) + ' MSEK'; }
+function fmt(n)  { return Math.round(n).toLocaleString('sv-SE') + ' kr'; }
+
+function loadKpis() {
+  // Datum
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('sv-SE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Netto
+  const netto = ek('netto');
+  document.getElementById('kpi-netto').textContent = netto ? fmtM(netto) : '—';
+
+  // FIRE-progress
+  const firePct = parseFloat(localStorage.getItem('ek_fire_pct')) || 0;
+  document.getElementById('kpi-fire').textContent = firePct ? Math.round(firePct) + '%' : '—';
+
+  // Utgifter/mån (utan sparande)
+  const boende   = ek('ut_lan1') + ek('ut_lan_lag') + ek('ut_vatten') + ek('ut_tibber') + ek('ut_energi') + ek('ut_avfall');
+  const transport= ek('ut_kia')  + ek('ut_eup');
+  const telefoni = ek('ut_telia') + ek('ut_telenor') + ek('ut_tre') + ek('ut_bredband5g') + ek('ut_telia_cloud');
+  const forsakr  = ek('ut_hem')  + ek('ut_trygg')   + ek('ut_skandia') + ek('ut_if') + ek('ut_svl');
+  const ovrigt   = ek('ut_led')  + ek('ut_akas')    + ek('ut_akas_l') + ek('ut_csn') + ek('ut_hjarn') + ek('ut_friskis');
+  const ovriga   = ek('ut_mc_f') + ek('ut_mc_u');
+  const prenumer = ek('ut_nextory') + ek('ut_claude') + ek('ut_spotify') + ek('ut_misc_pren');
+  const monthly  = boende + transport + telefoni + forsakr + ovrigt + ovriga + prenumer;
+  document.getElementById('kpi-utgift').textContent = monthly ? fmt(monthly) : '—';
+
+  // Gör-livet-rikare
+  const glr = parseFloat(localStorage.getItem('ek_glr_dag')) || 0;
+  document.getElementById('kpi-glr').textContent = glr ? fmt(glr) : '—';
+}
+
+if (sessionStorage.getItem('auth') === '1') loadKpis();
+
+document.getElementById('hero-date').textContent =
+  new Date().toLocaleDateString('sv-SE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+</script>
+</body>
+</html>
