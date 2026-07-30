@@ -589,8 +589,8 @@ function render() {
   const forsakr   = ek('ut_hem',0) + ek('ut_trygg',0) + ek('ut_skandia',0) + ek('ut_if',0) + ek('ut_svl',0);
   const ovrigt    = ek('ut_led',0) + ek('ut_akas',0) + ek('ut_akas_l',0) + ek('ut_csn',0) + ek('ut_hjarn',0) + ek('ut_friskis',0);
   const ovriga    = ek('ut_mc_f',0) + ek('ut_mc_u',0);
-  const amort     = ek('amort_villa',3400) + ek('amort_lag',1250);
-  const monthly   = boende + transport + telefoni + forsakr + ovrigt + ovriga - amort;
+  const prenumer  = ek('ut_nextory',0) + ek('ut_claude',0) + ek('ut_spotify',0) + ek('ut_misc_pren',0);
+  const monthly   = boende + transport + telefoni + forsakr + ovrigt + ovriga + prenumer;
   const buffMin   = monthly * 3;
   const buffMax   = monthly * 6;
 
