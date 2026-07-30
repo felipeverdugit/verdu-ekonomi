@@ -116,9 +116,9 @@
 <h1>Uttags-kalkylator</h1>
 <p class="subtitle">Simulera hur länge kapitalet räcker — med och utan pensionsinkomster.</p>
 
-<div class="grid-2">
-  <!-- Förutsättningar -->
-  <section>
+<!-- Förutsättningar -->
+<section>
+  <div class="grid-2">
     <div class="card">
       <h2>Förutsättningar</h2>
       <div class="row">
@@ -144,62 +144,69 @@
         Nettoutgifter/mån: <span id="lbl-monthly" style="color:var(--text)">—</span>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Pensionsinkomster -->
-  <section>
-    <div class="card">
-      <h2>Pensionsinkomster</h2>
-      <table class="pension-table">
-        <thead><tr><th>Källa</th><th>Från år</th><th>T.o.m. år</th><th>kr/mån (netto)</th></tr></thead>
-        <tbody>
-          <tr>
-            <td class="lbl-cell">Norsk TjP — Ulrika</td>
-            <td><input type="number" id="p1-ar"  value="2032" min="2025" max="2060"></td>
-            <td><input type="number" id="p1-tom" placeholder="—" min="2025" max="2100"></td>
-            <td><input type="number" id="p1-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell">Svensk TjP — Ulrika</td>
-            <td><input type="number" id="p2-ar"  value="2037" min="2025" max="2060"></td>
-            <td><input type="number" id="p2-tom" placeholder="—" min="2025" max="2100"></td>
-            <td><input type="number" id="p2-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell">Norsk TjP — Felipe</td>
-            <td><input type="number" id="p3-ar"  value="2037" min="2025" max="2060"></td>
-            <td><input type="number" id="p3-tom" placeholder="—" min="2025" max="2100"></td>
-            <td><input type="number" id="p3-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell" style="color:var(--green)">Allmänpension Ulrika (SE+NAV)</td>
-            <td><input type="number" id="p4-ar"  value="2038" min="2025" max="2070"></td>
-            <td><input type="number" id="p4-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
-            <td><input type="number" id="p4-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell">Svensk TjP — Felipe</td>
-            <td><input type="number" id="p5-ar"  value="2040" min="2025" max="2070"></td>
-            <td><input type="number" id="p5-tom" placeholder="—" min="2025" max="2100"></td>
-            <td><input type="number" id="p5-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell" style="color:var(--green)">Fast TjP Felipe (Alecta/KPA)</td>
-            <td><input type="number" id="p6-ar"  value="2040" min="2025" max="2070"></td>
-            <td><input type="number" id="p6-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
-            <td><input type="number" id="p6-bel" value="0" step="500"></td>
-          </tr>
-          <tr>
-            <td class="lbl-cell" style="color:var(--green)">Allmänpension Felipe (SE+NAV)</td>
-            <td><input type="number" id="p7-ar"  value="2043" min="2025" max="2070"></td>
-            <td><input type="number" id="p7-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
-            <td><input type="number" id="p7-bel" value="0" step="500"></td>
-          </tr>
-        </tbody>
-      </table>
+<!-- Pensionsinkomster — full bredd -->
+<section>
+  <div class="card">
+    <h2>Pensionsinkomster</h2>
+    <div style="overflow-x:auto;">
+    <table class="pension-table" style="min-width:560px;">
+      <thead><tr>
+        <th style="min-width:200px;">Källa</th>
+        <th style="width:90px;">Från år</th>
+        <th style="width:90px;">T.o.m. år</th>
+        <th style="width:130px;">kr/mån (netto)</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="lbl-cell">Norsk TjP — Ulrika</td>
+          <td><input type="number" id="p1-ar"  value="2032" min="2025" max="2060"></td>
+          <td><input type="number" id="p1-tom" placeholder="—" min="2025" max="2100"></td>
+          <td><input type="number" id="p1-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell">Svensk TjP — Ulrika</td>
+          <td><input type="number" id="p2-ar"  value="2037" min="2025" max="2060"></td>
+          <td><input type="number" id="p2-tom" placeholder="—" min="2025" max="2100"></td>
+          <td><input type="number" id="p2-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell">Norsk TjP — Felipe</td>
+          <td><input type="number" id="p3-ar"  value="2037" min="2025" max="2060"></td>
+          <td><input type="number" id="p3-tom" placeholder="—" min="2025" max="2100"></td>
+          <td><input type="number" id="p3-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell" style="color:var(--green)">Allmänpension Ulrika (SE+NAV)</td>
+          <td><input type="number" id="p4-ar"  value="2038" min="2025" max="2070"></td>
+          <td style="text-align:center;color:var(--muted);font-size:.8rem;">livsvarig</td>
+          <td><input type="number" id="p4-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell">Svensk TjP — Felipe</td>
+          <td><input type="number" id="p5-ar"  value="2040" min="2025" max="2070"></td>
+          <td><input type="number" id="p5-tom" placeholder="—" min="2025" max="2100"></td>
+          <td><input type="number" id="p5-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell" style="color:var(--green)">Fast TjP Felipe (Alecta/KPA)</td>
+          <td><input type="number" id="p6-ar"  value="2040" min="2025" max="2070"></td>
+          <td style="text-align:center;color:var(--muted);font-size:.8rem;">livsvarig</td>
+          <td><input type="number" id="p6-bel" value="0" step="500"></td>
+        </tr>
+        <tr>
+          <td class="lbl-cell" style="color:var(--green)">Allmänpension Felipe (SE+NAV)</td>
+          <td><input type="number" id="p7-ar"  value="2043" min="2025" max="2070"></td>
+          <td style="text-align:center;color:var(--muted);font-size:.8rem;">livsvarig</td>
+          <td><input type="number" id="p7-bel" value="0" step="500"></td>
+        </tr>
+      </tbody>
+    </table>
     </div>
-  </section>
-</div>
+  </div>
+</section>
 
 <hr>
 
@@ -267,12 +274,16 @@ function fmt(n)  { return Math.round(n).toLocaleString('sv-SE') + ' kr'; }
 function fmtM(n) { return (n / 1e6).toFixed(2) + ' MSEK'; }
 function ek(k)   { return parseFloat(localStorage.getItem('ek_' + k)) || 0; }
 
+const LIVSVARIG = [4, 6, 7]; // rader utan slutår
 function getPensions() {
-  return [1,2,3,4,5,6,7].map(i => ({
-    ar:  parseInt(document.getElementById('p' + i + '-ar').value)   || 9999,
-    tom: parseInt(document.getElementById('p' + i + '-tom').value)  || 9999,
-    bel: parseFloat(document.getElementById('p' + i + '-bel').value) || 0,
-  }));
+  return [1,2,3,4,5,6,7].map(i => {
+    const tomEl = document.getElementById('p' + i + '-tom');
+    return {
+      ar:  parseInt(document.getElementById('p' + i + '-ar').value)   || 9999,
+      tom: LIVSVARIG.includes(i) ? 9999 : (tomEl ? parseInt(tomEl.value) || 9999 : 9999),
+      bel: parseFloat(document.getElementById('p' + i + '-bel').value) || 0,
+    };
+  });
 }
 
 let uttaChart = null;
