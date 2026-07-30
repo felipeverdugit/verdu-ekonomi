@@ -1610,7 +1610,7 @@ function recalculate() {
       return extraMån * (Math.pow(1 + avkMån, nMån) - 1) / avkMån;
     }
 
-    const basKap   = grp_fonder + grp_tjp_f + grp_lonevxl + grp_tjp_u + grp_norge + grp_pp + borgoDep + aktieFV;
+    const basKap   = fonder_fv + grp_tjp_f + grp_lonevxl + grp_tjp_u + norge_fv + pp_fv_sum + sparkonto_fv + (aktierIFire ? aktierVal : 0);
     const fvF      = extraFV(extraSparF);
     const fvU      = extraFV(extraSparU);
     const fvFU     = extraFV(extraSparF + extraSparU);
