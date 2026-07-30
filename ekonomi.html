@@ -247,13 +247,13 @@
       <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-ovriga" style="color:#e879f9;">—</span></div>
     </div>
 
-    <div class="card" style="border-left-color:#fbbf24;">
-      <div class="card-title" style="color:#fbbf24;">Prenumerationer / mån <span style="font-weight:400;font-size:.75rem;color:var(--muted);">(via MC Felipe)</span></div>
+    <div class="card" style="border-left-color:#a3e635;">
+      <div class="card-title" style="color:#a3e635;">Prenumerationer / mån <span style="font-weight:400;font-size:.75rem;color:var(--muted);">(via MC Felipe)</span></div>
       <div class="row"><span class="lbl">Nextory</span><input type="number" data-key="ut_nextory" value="269" step="10"></div>
       <div class="row"><span class="lbl">Anthropic (Claude)</span><input type="number" data-key="ut_claude" value="253" step="10"></div>
       <div class="row"><span class="lbl">Spotify</span><input type="number" data-key="ut_spotify" value="219" step="10"></div>
       <div class="row"><span class="lbl">Miscellaneous</span><input type="number" data-key="ut_misc_pren" value="0" step="10"></div>
-      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-prenumerationer" style="color:#fbbf24;">—</span></div>
+      <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-prenumerationer" style="color:#a3e635;">—</span></div>
     </div>
 
     <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;">
@@ -628,7 +628,7 @@ function recalculate() {
   // ── Donut ────────────────────────────────────────────────────────────────
   const donutData = [boende, transport, telefoni, forsakr, ovrigt, spar, ovriga, prenumer];
   const donutLabels = ['Boende','Transport','Telefoni','Försäkringar','Fack & Övrigt','Sparande','Övriga utgifter','Prenumerationer'];
-  const donutColors = ['#4f8ef7','#6ee7b7','#22d3ee','#f59e0b','#a78bfa','#f87171','#e879f9','#fbbf24'];
+  const donutColors = ['#4f8ef7','#6ee7b7','#22d3ee','#f59e0b','#a78bfa','#f87171','#e879f9','#a3e635'];
 
   if (donut) {
     donut.data.datasets[0].data = donutData;
