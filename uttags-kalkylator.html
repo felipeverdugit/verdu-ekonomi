@@ -458,12 +458,14 @@ function init() {
       }
       if (bel && el_bel) el_bel.value = bel;
     });
+    const uttavk = localStorage.getItem('rap_sl_slider-uttavk');
+    if (uttavk) document.getElementById('inp-avkastning').value = parseFloat(uttavk).toFixed(1);
   }
   loadPensions();
 
   // Auto-uppdatera om FIRE-rapporten ändras i annan flik eller vid bfcache-återladdning
   window.addEventListener('storage', e => {
-    if (e.key && e.key.startsWith('rap_utk_')) { loadPensions(); recalc(); }
+    if (e.key && (e.key.startsWith('rap_utk_') || e.key === 'rap_sl_slider-uttavk')) { loadPensions(); recalc(); }
   });
   window.addEventListener('pageshow', e => {
     if (e.persisted) { loadPensions(); recalc(); }
