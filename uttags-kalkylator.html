@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uttags-kalkylator — Verdu Ekonomi</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --card:#1a1d27; --card2:#21263a;
+    --text:#e2e8f0; --muted:#8892a4; --border:#2d3348;
+    --radius:14px;
+    --blue:#4f8ef7; --green:#6ee7b7; --cyan:#22d3ee;
+    --orange:#f59e0b; --purple:#a78bfa; --red:#f87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:15px; line-height:1.6; padding:24px; max-width:900px; margin:0 auto; }
+
+  h1 { font-size:2rem; font-weight:700; color:var(--blue); margin-bottom:4px; }
+  h2 { font-size:.85rem; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:.07em; margin-bottom:14px; }
+  .subtitle { color:var(--muted); font-size:.9rem; margin-bottom:28px; }
+  section { margin-bottom:28px; }
+  hr { border:none; border-top:1px solid var(--border); margin:28px 0; }
+
+  .btn-back { display:inline-block; color:var(--muted); font-size:.85rem; text-decoration:none; margin-bottom:20px; }
+  .btn-back:hover { color:var(--text); }
+
+  /* Grid layout */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:640px) { .grid-2 { grid-template-columns:1fr; } }
+
+  /* Cards */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+
+  /* Inputs */
+  .row { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); }
+  .row:last-child { border-bottom:none; }
+  .row .lbl { color:var(--muted); font-size:.85rem; }
+  .row input[type=number] { width:130px; background:var(--card2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:6px 10px; font-size:.9rem; text-align:right; }
+  .row input[type=number]:focus { outline:none; border-color:var(--blue); }
+
+  /* Slider */
+  .slider-wrap { margin:14px 0 6px; }
+  .slider-label { display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
+  .slider-val { color:var(--blue); font-weight:700; font-size:1rem; }
+  input[type=range] { width:100%; accent-color:var(--blue); cursor:pointer; }
+
+  /* Pension table */
+  .pension-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .pension-table th { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; padding:6px 8px; text-align:left; border-bottom:1px solid var(--border); }
+  .pension-table td { padding:8px; border-bottom:1px solid var(--border); }
+  .pension-table td:last-child { border-bottom:none; }
+  .pension-table input { width:100%; background:var(--card2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 8px; font-size:.85rem; }
+  .pension-table input:focus { outline:none; border-color:var(--blue); }
+  .pension-table .lbl-cell { color:var(--muted); font-size:.82rem; white-space:nowrap; }
+
+  /* Resultat */
+  .result-box { background:var(--card2); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
+  .result-box .result-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+  .result-box .result-lbl { color:var(--muted); font-size:.85rem; }
+  .result-box .result-val { font-weight:700; font-size:1rem; }
+
+  .verdict { font-size:1.1rem; font-weight:700; padding:14px 18px; border-radius:12px; margin-bottom:16px; }
+  .verdict.ok   { background:#6ee7b715; border:1px solid var(--green); color:var(--green); }
+  .verdict.warn { background:#f59e0b15; border:1px solid var(--orange); color:var(--orange); }
+  .verdict.bad  { background:#f8717115; border:1px solid var(--red); color:var(--red); }
+
+  /* Chart */
+  .chart-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+
+  /* Yearly table */
+  .yr-table { width:100%; border-collapse:collapse; font-size:.78rem; margin-top:4px; }
+  .yr-table th { background:var(--card2); color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:.68rem; padding:7px 10px; text-align:right; border-bottom:1px solid var(--border); }
+  .yr-table th:first-child { text-align:left; }
+  .yr-table td { padding:7px 10px; text-align:right; border-bottom:1px solid var(--border); }
+  .yr-table td:first-child { text-align:left; color:var(--muted); font-weight:600; }
+  .yr-table tr:last-child td { border-bottom:none; }
+  .yr-table tr.fire-yr td { background:var(--card2); }
+  .yr-table tr.depleted td { color:var(--red); }
+  .yr-scroll { overflow-x:auto; max-height:320px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; }
+
+  footer { color:var(--muted); font-size:.78rem; margin-top:40px; }
+</style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0f1117;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border-radius:16px;padding:40px;width:320px;text-align:center;border:1px solid #2d3348;">
+    <div style="font-size:1.5rem;font-weight:700;color:#4f8ef7;margin-bottom:8px;">Verdu Ekonomi</div>
+    <div style="color:#8892a4;font-size:.9rem;margin-bottom:24px;">Ange lösenord för att fortsätta</div>
+    <input id="auth-pw" type="password" placeholder="Lösenord" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2d3348;background:#0f1117;color:#e2e8f0;font-size:1rem;margin-bottom:12px;outline:none;">
+    <button onclick="checkAuth()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#4f8ef7;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">Logga in</button>
+    <div id="auth-err" style="color:#f87171;margin-top:12px;font-size:.85rem;min-height:20px;"></div>
+  </div>
+</div>
+<script>
+  (function() {
+    if (sessionStorage.getItem('auth') === '1') document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('auth-pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkAuth(); });
+  })();
+  function checkAuth() {
+    if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('auth-overlay').style.display = 'none';
+      init();
+    } else {
+      document.getElementById('auth-err').textContent = 'Fel lösenord';
+      document.getElementById('auth-pw').value = '';
+    }
+  }
+</script>
+
+<a class="btn-back" href="index.html">← Tillbaka</a>
+
+<h1>Uttags-kalkylator</h1>
+<p class="subtitle">Simulera hur länge kapitalet räcker — med och utan pensionsinkomster.</p>
+
+<div class="grid-2">
+  <!-- Förutsättningar -->
+  <section>
+    <div class="card">
+      <h2>Förutsättningar</h2>
+      <div class="row">
+        <span class="lbl">Startkapital (kr)</span>
+        <input type="number" id="inp-kapital" step="100000" value="0">
+      </div>
+      <div class="row">
+        <span class="lbl">Avkastning (%/år)</span>
+        <input type="number" id="inp-avkastning" step="0.5" value="4.0" min="0" max="15">
+      </div>
+      <div class="row">
+        <span class="lbl">Startår för uttag</span>
+        <input type="number" id="inp-startar" step="1" value="2035" min="2025" max="2050">
+      </div>
+      <div class="slider-wrap" style="margin-top:16px;">
+        <div class="slider-label">
+          <span>Månadsuttag</span>
+          <span class="slider-val" id="slider-display">—</span>
+        </div>
+        <input type="range" id="slider-uttag" min="10000" max="120000" step="1000" value="55000">
+      </div>
+      <div style="text-align:right;font-size:.78rem;color:var(--muted);margin-top:4px;">
+        Nettoutgifter/mån: <span id="lbl-monthly" style="color:var(--text)">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pensionsinkomster -->
+  <section>
+    <div class="card">
+      <h2>Pensionsinkomster</h2>
+      <table class="pension-table">
+        <thead><tr><th>Källa</th><th>Från år</th><th>kr/mån (netto)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="lbl-cell">TjP Ulrika</td>
+            <td><input type="number" id="p1-ar" value="2035" min="2025" max="2060"></td>
+            <td><input type="number" id="p1-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell">TjP Felipe</td>
+            <td><input type="number" id="p2-ar" value="2037" min="2025" max="2060"></td>
+            <td><input type="number" id="p2-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell">Allmänpension (SE)</td>
+            <td><input type="number" id="p3-ar" value="2038" min="2025" max="2070"></td>
+            <td><input type="number" id="p3-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell">NAV + norsk pension</td>
+            <td><input type="number" id="p4-ar" value="2038" min="2025" max="2070"></td>
+            <td><input type="number" id="p4-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell" style="color:var(--text)">Övrigt</td>
+            <td><input type="number" id="p5-ar" value="2040" min="2025" max="2070"></td>
+            <td><input type="number" id="p5-bel" value="0" step="500"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<hr>
+
+<!-- Resultat -->
+<section>
+  <h2>Resultat</h2>
+  <div id="verdict" class="verdict ok">—</div>
+  <div class="result-box">
+    <div class="result-row">
+      <span class="result-lbl">Kapital vid startår</span>
+      <span class="result-val" id="res-start">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-lbl">Månadsuttag</span>
+      <span class="result-val" id="res-uttag">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-lbl">Total pensionsinkomst (vid full pension)</span>
+      <span class="result-val" id="res-pension">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-lbl">Nettouttagsbehov (uttag − pension)</span>
+      <span class="result-val" id="res-netto-uttag">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-lbl">Safe withdrawal rate (SWR)</span>
+      <span class="result-val" id="res-swr">—</span>
+    </div>
+  </div>
+</section>
+
+<!-- Diagram -->
+<section>
+  <div class="chart-card">
+    <canvas id="uttaChart" height="110"></canvas>
+  </div>
+</section>
+
+<hr>
+
+<!-- Årsöversikt -->
+<section>
+  <h2>Årsöversikt</h2>
+  <div class="yr-scroll">
+    <table class="yr-table">
+      <thead>
+        <tr>
+          <th>År</th>
+          <th>Kapital</th>
+          <th>Avkastning</th>
+          <th>Pension/mån</th>
+          <th>Nettoutttag/mån</th>
+          <th>Förändring</th>
+        </tr>
+      </thead>
+      <tbody id="yr-tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Uttags-kalkylator &nbsp;·&nbsp; Verdu Ekonomi</footer>
+
+<script>
+function fmt(n)  { return Math.round(n).toLocaleString('sv-SE') + ' kr'; }
+function fmtM(n) { return (n / 1e6).toFixed(2) + ' MSEK'; }
+function ek(k)   { return parseFloat(localStorage.getItem('ek_' + k)) || 0; }
+
+function getPensions() {
+  return [1,2,3,4,5].map(i => ({
+    ar:  parseInt(document.getElementById('p' + i + '-ar').value)  || 9999,
+    bel: parseFloat(document.getElementById('p' + i + '-bel').value) || 0,
+  }));
+}
+
+let uttaChart = null;
+
+function recalc() {
+  const kapital   = parseFloat(document.getElementById('inp-kapital').value) || 0;
+  const avkPct    = parseFloat(document.getElementById('inp-avkastning').value) / 100 || 0.04;
+  const startAr   = parseInt(document.getElementById('inp-startar').value) || 2035;
+  const uttag     = parseFloat(document.getElementById('slider-uttag').value) || 0;
+  const pensions  = getPensions();
+  const endAr     = 2075;
+
+  document.getElementById('slider-display').textContent = fmt(uttag);
+
+  // Simulate year by year
+  const labels = [], kapSerie = [], pensionSerie = [];
+  let cap = kapital;
+  let depletedYear = null;
+  const rows = [];
+  const FIRE_YEARS = [2035, 2037];
+
+  for (let yr = startAr; yr <= endAr; yr++) {
+    const pensionMon = pensions.filter(p => p.ar <= yr).reduce((s, p) => s + p.bel, 0);
+    const nettoUttag = Math.max(0, uttag - pensionMon);
+    const avkastning = cap * avkPct;
+    const forandring = avkastning - nettoUttag * 12;
+
+    labels.push(yr.toString());
+    kapSerie.push(Math.max(0, cap) / 1e6);
+    pensionSerie.push(pensionMon);
+
+    rows.push({ yr, cap: Math.max(0, cap), avkastning, pensionMon, nettoUttag, forandring });
+
+    if (cap <= 0 && !depletedYear) depletedYear = yr;
+    cap = cap + forandring;
+  }
+
+  // Full pension (last year)
+  const fullPension = pensions.reduce((s, p) => s + p.bel, 0);
+  const nettoFull   = Math.max(0, uttag - fullPension);
+  const swr         = kapital > 0 ? (nettoFull * 12 / kapital * 100) : 0;
+
+  // Verdict
+  const verdictEl = document.getElementById('verdict');
+  if (depletedYear) {
+    verdictEl.className = 'verdict bad';
+    verdictEl.textContent = '⚠ Kapitalet tar slut år ' + depletedYear + ' — öka avkastning, minska uttag eller öka pensionen.';
+  } else if (swr <= 4) {
+    verdictEl.className = 'verdict ok';
+    verdictEl.textContent = '✓ Kapitalet håller hela simuleringen (SWR ' + swr.toFixed(1) + '% ≤ 4%) — ekonomisk frihet.';
+  } else {
+    verdictEl.className = 'verdict warn';
+    verdictEl.textContent = '~ SWR ' + swr.toFixed(1) + '% är något högt — kapitalet kan ta slut beroende på faktisk avkastning.';
+  }
+
+  // Result summary
+  document.getElementById('res-start').textContent       = fmtM(kapital);
+  document.getElementById('res-uttag').textContent       = fmt(uttag) + '/mån';
+  document.getElementById('res-pension').textContent     = fmt(fullPension) + '/mån';
+  document.getElementById('res-netto-uttag').textContent = fmt(nettoFull) + '/mån';
+  document.getElementById('res-swr').textContent         = swr.toFixed(1) + '%';
+
+  // Chart
+  const fireIdxs = labels.reduce((acc,l,i) => { if (FIRE_YEARS.includes(parseInt(l))) acc.push(i); return acc; }, []);
+  const ptRadius = labels.map((l,i) => fireIdxs.includes(i) ? 8 : 0);
+  const ptColor  = labels.map((l,i) => fireIdxs.includes(i) ? '#a78bfa' : '#6ee7b7');
+
+  const datasets = [
+    {
+      label: 'Kapital (MSEK)',
+      data: kapSerie,
+      borderColor: '#6ee7b7',
+      backgroundColor: '#6ee7b710',
+      fill: true,
+      tension: .3,
+      pointRadius: ptRadius,
+      pointBackgroundColor: ptColor,
+      yAxisID: 'y',
+    },
+    {
+      label: 'Pensionsinkomst (kr/mån)',
+      data: pensionSerie,
+      borderColor: '#f59e0b',
+      backgroundColor: 'transparent',
+      borderDash: [5,4],
+      tension: .3,
+      fill: false,
+      pointRadius: 0,
+      yAxisID: 'y2',
+    },
+  ];
+
+  if (uttaChart) {
+    uttaChart.data.labels   = labels;
+    uttaChart.data.datasets = datasets;
+    uttaChart.update();
+  } else {
+    uttaChart = new Chart(document.getElementById('uttaChart'), {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#e2e8f0', boxWidth: 14 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.datasetIndex === 0
+                ? ' Kapital: ' + ctx.parsed.y.toFixed(2) + ' MSEK'
+                : ' Pension: ' + Math.round(ctx.parsed.y).toLocaleString('sv-SE') + ' kr/mån',
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#8892a4', maxTicksLimit: 14 }, grid: { color: '#2d3348' } },
+          y:  { position:'left',  ticks: { color: '#8892a4', callback: v => v.toFixed(1) + ' M' }, grid: { color: '#2d3348' }, title: { display:true, text:'Kapital', color:'#8892a4' } },
+          y2: { position:'right', ticks: { color: '#f59e0b', callback: v => Math.round(v).toLocaleString('sv-SE') + ' kr' }, grid: { drawOnChartArea:false }, title: { display:true, text:'Pension/mån', color:'#f59e0b' } },
+        }
+      }
+    });
+  }
+
+  // Year table
+  const tbody = document.getElementById('yr-tbody');
+  tbody.innerHTML = rows.map(r => {
+    const isFire = FIRE_YEARS.includes(r.yr);
+    const isDep  = r.cap <= 0;
+    const cls    = isDep ? 'depleted' : isFire ? 'fire-yr' : '';
+    const badge  = isFire ? ' 🔥' : '';
+    const sign   = r.forandring >= 0 ? '+' : '';
+    const fColor = r.forandring >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<tr class="${cls}">
+      <td>${r.yr}${badge}</td>
+      <td>${isDep ? '—' : fmtM(r.cap)}</td>
+      <td style="color:var(--green)">${fmt(r.avkastning)}</td>
+      <td style="color:var(--orange)">${r.pensionMon > 0 ? fmt(r.pensionMon) + '/mån' : '—'}</td>
+      <td>${fmt(r.nettoUttag)}/mån</td>
+      <td style="color:${fColor}">${sign}${fmt(r.forandring)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function init() {
+  // Pre-fill from localStorage
+  const netto = parseFloat(localStorage.getItem('ek_netto')) || 0;
+  if (netto) document.getElementById('inp-kapital').value = Math.round(netto);
+
+  const monthly = ['ut_lan1','ut_lan_lag','ut_vatten','ut_tibber','ut_energi','ut_avfall',
+                   'ut_kia','ut_eup','ut_telia','ut_telenor','ut_tre','ut_bredband5g','ut_telia_cloud',
+                   'ut_hem','ut_trygg','ut_skandia','ut_if','ut_svl',
+                   'ut_led','ut_akas','ut_akas_l','ut_csn','ut_hjarn','ut_friskis',
+                   'ut_mc_f','ut_mc_u','ut_nextory','ut_claude','ut_spotify','ut_misc_pren']
+    .reduce((s,k) => s + ek(k), 0);
+  if (monthly) {
+    document.getElementById('slider-uttag').value = Math.round(monthly / 1000) * 1000;
+    document.getElementById('lbl-monthly').textContent = fmt(monthly);
+  }
+
+  // Listen for changes
+  ['inp-kapital','inp-avkastning','inp-startar','slider-uttag',
+   'p1-ar','p1-bel','p2-ar','p2-bel','p3-ar','p3-bel','p4-ar','p4-bel','p5-ar','p5-bel']
+    .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+
+  recalc();
+}
+
+if (sessionStorage.getItem('auth') === '1') init();
+</script>
+</body>
+</html>
