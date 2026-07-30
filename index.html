@@ -201,7 +201,8 @@ function loadKpis() {
   const storedFirePct = parseFloat(localStorage.getItem('ek_fire_pct'));
   const storedFireNum = parseFloat(localStorage.getItem('ek_fire_num'));
   const storedGlr     = parseFloat(localStorage.getItem('ek_glr_dag'));
-  const levnad  = parseFloat(localStorage.getItem('rap_levnadskostnad')) || 65000;
+  const levnad  = parseFloat(localStorage.getItem('ek_levnadskostnad'))
+               || parseFloat(localStorage.getItem('rap_levnadskostnad')) || 65000;
   const fireNum = !isNaN(storedFireNum) && storedFireNum > 0 ? storedFireNum : levnad * 12 / 0.04;
   const firePct = !isNaN(storedFirePct) && storedFirePct > 0 ? storedFirePct : (fireNum > 0 ? netto / fireNum * 100 : 0);
   const kvar    = Math.max(0, fireNum - netto);
