@@ -1093,8 +1093,8 @@ function recalculate() {
   const fNorskTjpAlder   = parseInt(document.getElementById('slider-f-norsk-tjp-alder').value) || 62;
   const uNorskTjpAlder   = parseInt(document.getElementById('slider-u-norsk-tjp-alder').value) || 62;
   const uTjpAlder        = parseInt(document.getElementById('slider-u-tjp-alder').value) || 62;
-  const YR_F_NORSK_TJP  = Math.max(fireYear, FELIPE_FODELSEAR + fNorskTjpAlder);
-  const YR_U_NORSK_TJP  = Math.max(fireYear, ULRIKA_FODELSEAR + uNorskTjpAlder);
+  const YR_F_NORSK_TJP  = FELIPE_FODELSEAR + fNorskTjpAlder;
+  const YR_U_NORSK_TJP  = ULRIKA_FODELSEAR + uNorskTjpAlder;
   const fAllmanAlder     = parseInt(document.getElementById('slider-f-allman-alder').value) || 67;
   const uAllmanAlder     = parseInt(document.getElementById('slider-u-allman-alder').value) || 68;
   document.getElementById('val-tjp-ar').textContent              = tjpAr;
