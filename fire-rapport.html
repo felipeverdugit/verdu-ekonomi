@@ -1149,7 +1149,9 @@ function recalculate() {
   const YR_U_ALLMAN    = ULRIKA_FODELSEAR + uAllmanAlder;
   const YR_F_ALLMAN_SE = FELIPE_FODELSEAR + fAllmanAlder;
 
-  // ── Exportera pensionsflöden till uttags-kalkylator (7 rader, kronologisk ordning) ──
+  // ── Exportera till uttags-kalkylator ──
+  localStorage.setItem('rap_uttavk', uttAvkAr);
+  // Pensionsflöden (7 rader, kronologisk ordning)
   // P1: Norsk TjP Ulrika (OTP, 62→77 år — tidsbegränsad)
   localStorage.setItem('rap_utk_p1_ar',  YR_U_NORSK_TJP);
   localStorage.setItem('rap_utk_p1_tom', u_norsk_tjp_slut_yr);
