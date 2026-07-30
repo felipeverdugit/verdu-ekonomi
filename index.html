@@ -197,15 +197,18 @@ function loadKpis() {
   const skuld  = ek('skul_bolan') + ek('skul_bolan_lag') + ek('skul_kia') + ek('skul_eup') + ek('skul_csn') + ek('skul_ovrigt');
   const netto  = tillg - skuld;
 
-  // ── FIRE ──────────────────────────────────────────────────────────────────
+  // ── FIRE — prioritera förberäknade värden från ekonomi.html ─────────────
+  const storedFirePct = parseFloat(localStorage.getItem('ek_fire_pct'));
+  const storedFireNum = parseFloat(localStorage.getItem('ek_fire_num'));
+  const storedGlr     = parseFloat(localStorage.getItem('ek_glr_dag'));
   const levnad  = parseFloat(localStorage.getItem('rap_levnadskostnad')) || 65000;
-  const fireNum = levnad * 12 / 0.04;
-  const firePct = fireNum > 0 ? netto / fireNum * 100 : 0;
+  const fireNum = !isNaN(storedFireNum) && storedFireNum > 0 ? storedFireNum : levnad * 12 / 0.04;
+  const firePct = !isNaN(storedFirePct) && storedFirePct > 0 ? storedFirePct : (fireNum > 0 ? netto / fireNum * 100 : 0);
   const kvar    = Math.max(0, fireNum - netto);
 
   // ── Gör-livet-rikare (0.01%-regeln) ──────────────────────────────────────
   const nettoExklPension = Math.max(0, netto - allman - tjp - norge);
-  const glr = Math.round(nettoExklPension * 0.0001);
+  const glr = !isNaN(storedGlr) && storedGlr > 0 ? storedGlr : Math.round(nettoExklPension * 0.0001);
 
   // ── Utgifter/mån ──────────────────────────────────────────────────────────
   const boende   = ek('ut_lan1') + ek('ut_lan_lag') + ek('ut_vatten') + ek('ut_tibber') + ek('ut_energi') + ek('ut_avfall');
@@ -218,10 +221,14 @@ function loadKpis() {
   const monthly  = boende + transport + telefoni + forsakr + ovrigt + ovriga + prenumer;
 
   // ── DOM ───────────────────────────────────────────────────────────────────
-  document.getElementById('kpi-netto').textContent  = netto   ? fmtM(netto)           : '—';
-  document.getElementById('kpi-fire').textContent   = firePct ? Math.round(firePct) + '%' : '—';
-  document.getElementById('kpi-utgift').textContent = monthly ? fmt(monthly)           : '—';
-  document.getElementById('kpi-glr').textContent    = glr     ? fmt(glr)               : '—';
+  const harFormos = tillg > 0;
+  document.getElementById('kpi-netto').textContent  = harFormos ? fmtM(netto)              : 'Saknar data';
+  document.getElementById('kpi-fire').textContent   = harFormos ? Math.round(firePct) + '%' : 'Saknar data';
+  document.getElementById('kpi-utgift').textContent = monthly   ? fmt(monthly)              : '—';
+  document.getElementById('kpi-glr').textContent    = harFormos ? fmt(glr)                  : 'Saknar data';
+  if (!harFormos) {
+    document.getElementById('sync-hint').style.display = 'block';
+  }
 
   // Termometer
   const pctCap    = Math.min(firePct, 100);
