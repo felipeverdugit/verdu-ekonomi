@@ -80,7 +80,7 @@
     if (btoa(document.getElementById('auth-pw').value) === 'UGFibG8kMjAyNQ==') {
       sessionStorage.setItem('auth', '1');
       document.getElementById('auth-overlay').style.display = 'none';
-      loadKpis();
+      syncAndLoad();
     } else {
       document.getElementById('auth-err').textContent = 'Fel lösenord';
       document.getElementById('auth-pw').value = '';
@@ -229,7 +229,20 @@ function loadKpis() {
   document.getElementById('kpi-glr').textContent = glr ? fmt(glr) : '—';
 }
 
-if (sessionStorage.getItem('auth') === '1') loadKpis();
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
+
+async function syncAndLoad() {
+  try {
+    const resp = await fetch(SYNC_URL + '?action=read');
+    const data = await resp.json();
+    Object.entries(data).forEach(([key, val]) => {
+      if (key.startsWith('ek_') && key !== 'ek_historik') localStorage.setItem(key, val);
+    });
+  } catch(e) { console.warn('Sheet sync misslyckades', e); }
+  loadKpis();
+}
+
+if (sessionStorage.getItem('auth') === '1') syncAndLoad();
 
 document.getElementById('hero-date').textContent =
   new Date().toLocaleDateString('sv-SE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
