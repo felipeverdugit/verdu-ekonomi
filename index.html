@@ -184,18 +184,47 @@ function loadKpis() {
   document.getElementById('hero-date').textContent =
     new Date().toLocaleDateString('sv-SE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-  // Netto
-  const netto = ek('netto');
-  document.getElementById('kpi-netto').textContent = netto ? fmtM(netto) : '—';
+  // ── Beräkna netto — exakt samma formel som ekonomi.html ──────────────────
+  const nokSek = ek('bal_nok_sek') || 0.97;
+  const fonder = ek('bal_lysaf') + ek('bal_lysau') + ek('bal_buffert') + ek('bal_sparkonto');
+  const tjp    = ek('bal_tjpf')  + ek('bal_lonevxl') + ek('bal_tidligare') + ek('bal_kapan') + ek('bal_tjpu');
+  const norge  = ek('bal_norgef') + ek('bal_dnbf') + ek('bal_sbf') + ek('bal_sbu') + ek('bal_dnbu');
+  const allman = ek('bal_ap_f') + ek('bal_pp_f') + ek('bal_ap_u') + ek('bal_pp_u')
+               + (ek('bal_nav_f') + ek('bal_nav_u')) * nokSek;
+  const aktier = ek('bal_norco_antal') * ek('bal_norco_kurs') + ek('bal_oncop_antal') * ek('bal_oncop_kurs');
+  const bostad = ek('bal_villa') + ek('bal_lagenhet');
+  const tillg  = fonder + tjp + norge + allman + aktier + bostad;
+  const skuld  = ek('skul_bolan') + ek('skul_bolan_lag') + ek('skul_kia') + ek('skul_eup') + ek('skul_csn') + ek('skul_ovrigt');
+  const netto  = tillg - skuld;
 
-  // FIRE-progress
-  const firePct = parseFloat(localStorage.getItem('ek_fire_pct')) || 0;
-  document.getElementById('kpi-fire').textContent = firePct ? Math.round(firePct) + '%' : '—';
-
-  // FIRE-termometer
-  const fireNum = parseFloat(localStorage.getItem('ek_fire_num')) || 0;
+  // ── FIRE ──────────────────────────────────────────────────────────────────
+  const levnad  = parseFloat(localStorage.getItem('rap_levnadskostnad')) || 65000;
+  const fireNum = levnad * 12 / 0.04;
+  const firePct = fireNum > 0 ? netto / fireNum * 100 : 0;
   const kvar    = Math.max(0, fireNum - netto);
-  const pctCap  = Math.min(firePct, 100);
+
+  // ── Gör-livet-rikare (0.01%-regeln) ──────────────────────────────────────
+  const nettoExklPension = Math.max(0, netto - allman - tjp - norge);
+  const glr = Math.round(nettoExklPension * 0.0001);
+
+  // ── Utgifter/mån ──────────────────────────────────────────────────────────
+  const boende   = ek('ut_lan1') + ek('ut_lan_lag') + ek('ut_vatten') + ek('ut_tibber') + ek('ut_energi') + ek('ut_avfall');
+  const transport= ek('ut_kia')  + ek('ut_eup');
+  const telefoni = ek('ut_telia') + ek('ut_telenor') + ek('ut_tre') + ek('ut_bredband5g') + ek('ut_telia_cloud');
+  const forsakr  = ek('ut_hem')  + ek('ut_trygg')   + ek('ut_skandia') + ek('ut_if') + ek('ut_svl');
+  const ovrigt   = ek('ut_led')  + ek('ut_akas')    + ek('ut_akas_l') + ek('ut_csn') + ek('ut_hjarn') + ek('ut_friskis');
+  const ovriga   = ek('ut_mc_f') + ek('ut_mc_u');
+  const prenumer = ek('ut_nextory') + ek('ut_claude') + ek('ut_spotify') + ek('ut_misc_pren');
+  const monthly  = boende + transport + telefoni + forsakr + ovrigt + ovriga + prenumer;
+
+  // ── DOM ───────────────────────────────────────────────────────────────────
+  document.getElementById('kpi-netto').textContent  = netto   ? fmtM(netto)           : '—';
+  document.getElementById('kpi-fire').textContent   = firePct ? Math.round(firePct) + '%' : '—';
+  document.getElementById('kpi-utgift').textContent = monthly ? fmt(monthly)           : '—';
+  document.getElementById('kpi-glr').textContent    = glr     ? fmt(glr)               : '—';
+
+  // Termometer
+  const pctCap    = Math.min(firePct, 100);
   const fireColor = firePct < 35 ? 'var(--red)' : firePct < 65 ? 'var(--orange)' : firePct < 100 ? 'var(--blue)' : 'var(--green)';
   const fasTxt    = firePct < 10  ? 'Överleva'
                   : firePct < 35  ? 'Stabilisera'
@@ -209,24 +238,7 @@ function loadKpis() {
   document.getElementById('fire-d-netto').textContent = netto   ? fmtM(netto)   : '—';
   document.getElementById('fire-d-num').textContent   = fireNum ? fmtM(fireNum) : '—';
   document.getElementById('fire-d-kvar').textContent  = fireNum ? fmtM(kvar)    : '—';
-  setTimeout(() => {
-    document.getElementById('fire-bar-fill').style.width = pctCap + '%';
-  }, 100);
-
-  // Utgifter/mån (utan sparande)
-  const boende   = ek('ut_lan1') + ek('ut_lan_lag') + ek('ut_vatten') + ek('ut_tibber') + ek('ut_energi') + ek('ut_avfall');
-  const transport= ek('ut_kia')  + ek('ut_eup');
-  const telefoni = ek('ut_telia') + ek('ut_telenor') + ek('ut_tre') + ek('ut_bredband5g') + ek('ut_telia_cloud');
-  const forsakr  = ek('ut_hem')  + ek('ut_trygg')   + ek('ut_skandia') + ek('ut_if') + ek('ut_svl');
-  const ovrigt   = ek('ut_led')  + ek('ut_akas')    + ek('ut_akas_l') + ek('ut_csn') + ek('ut_hjarn') + ek('ut_friskis');
-  const ovriga   = ek('ut_mc_f') + ek('ut_mc_u');
-  const prenumer = ek('ut_nextory') + ek('ut_claude') + ek('ut_spotify') + ek('ut_misc_pren');
-  const monthly  = boende + transport + telefoni + forsakr + ovrigt + ovriga + prenumer;
-  document.getElementById('kpi-utgift').textContent = monthly ? fmt(monthly) : '—';
-
-  // Gör-livet-rikare
-  const glr = parseFloat(localStorage.getItem('ek_glr_dag')) || 0;
-  document.getElementById('kpi-glr').textContent = glr ? fmt(glr) : '—';
+  setTimeout(() => { document.getElementById('fire-bar-fill').style.width = pctCap + '%'; }, 100);
 }
 
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
