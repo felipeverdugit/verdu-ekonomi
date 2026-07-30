@@ -121,7 +121,7 @@
 </script>
 
 <h1>Ekonomisk Översikt — Interaktiv</h1>
-<p class="subtitle">Genererad 2026-07-27 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
+<p class="subtitle">Genererad 2026-07-30 &nbsp;·&nbsp; Ändra parametrarna nedan — rapporten räknar om direkt</p>
 
 <!-- Kontrollpanel -->
 <div class="ctrl-panel">
@@ -321,6 +321,28 @@
       </div>
     </div>
     <div class="recalc-note" style="margin-top:12px;">Allt uppdateras automatiskt</div>
+  </div>
+
+  <!-- Lönehöjning -->
+  <div class="ctrl-card ctrl-card--purple">
+    <div class="ctrl-card-title">Lönehöjning-scenarier</div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-group">
+        <label>Lönehöjning Felipe</label>
+        <span class="ctrl-val"><span id="val-lonehoj-f">5</span> %</span>
+        <input type="range" id="slider-lonehoj-f" min="0" max="30" step="1" value="5">
+      </div>
+      <div class="ctrl-group">
+        <label>Lönehöjning Ulrika</label>
+        <span class="ctrl-val"><span id="val-lonehoj-u">5</span> %</span>
+        <input type="range" id="slider-lonehoj-u" min="0" max="30" step="1" value="5">
+      </div>
+      <div class="ctrl-group">
+        <label>Sparandedel av höjning</label>
+        <span class="ctrl-val"><span id="val-sparandel">50</span> %</span>
+        <input type="range" id="slider-sparandel" min="0" max="100" step="5" value="50">
+      </div>
+    </div>
   </div>
 
 </div>
@@ -695,6 +717,21 @@
   </div>
 </section>
 
+<!-- Lönehöjning-scenarier -->
+<section>
+  <h2>Lönehöjning-scenarier</h2>
+  <p style="color:var(--muted);margin-bottom:16px;font-size:.9rem;">
+    Effekt på kapital vid FIRE-datum om lönen höjs och en del av ökningen sparas.
+    Justera procent och sparandedel i kontrollpanelen.
+  </p>
+  <div class="grid grid-4" id="lonehoj-grid">
+    <div class="card" id="lh-bas-card" style="padding:16px;"></div>
+    <div class="card" id="lh-f-card"   style="padding:16px;"></div>
+    <div class="card" id="lh-u-card"   style="padding:16px;"></div>
+    <div class="card" id="lh-fu-card"  style="padding:16px;"></div>
+  </div>
+</section>
+
 <!-- FIRE-tabell -->
 <section>
   <h2>FIRE-färdplan — fas för fas</h2>
@@ -719,7 +756,7 @@
 </section>
 
 <footer>
-  Rapport genererad 2026-07-27 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
+  Rapport genererad 2026-07-30 &nbsp;·&nbsp; Rådata från Excel, beräkningar i JavaScript &nbsp;·&nbsp; Ej finansiell rådgivning
 </footer>
 
 <script>
@@ -1529,12 +1566,87 @@ function recalculate() {
       (u_norsk_tjp + u_svensk_tjp) * skattFaktor,
       f_norsk_tjp * skattFaktor);
   })();
+
+  // ── Lönehöjning-scenarier ─────────────────────────────────────────────────
+  (function() {
+    const lhF      = parseFloat(document.getElementById('slider-lonehoj-f').value) / 100;
+    const lhU      = parseFloat(document.getElementById('slider-lonehoj-u').value) / 100;
+    const sparDel  = parseFloat(document.getElementById('slider-sparandel').value) / 100;
+    const SKATT    = 0.30;
+
+    // Bruttolöner från ekonomi.html via localStorage
+    const bruttoF  = parseFloat(localStorage.getItem('ek_brutto_f')) || 67300;
+    const bruttoU  = parseFloat(localStorage.getItem('ek_brutto_u')) || 35500;
+
+    // Extra netto per månad → extra sparande
+    const extraNettoF  = bruttoF * lhF * (1 - SKATT);
+    const extraNettoU  = bruttoU * lhU * (1 - SKATT);
+    const extraSparF   = extraNettoF * sparDel;
+    const extraSparU   = extraNettoU * sparDel;
+
+    // Kapitaltillväxt av extra sparande vid FIRE-datum (2035 = antalAr år)
+    const avkMån = avkAr / 100 / 12;
+    const nMån   = antalAr * 12;
+    function extraFV(extraMån) {
+      if (avkMån === 0) return extraMån * nMån;
+      return extraMån * (Math.pow(1 + avkMån, nMån) - 1) / avkMån;
+    }
+
+    const basKap   = grp_fonder + grp_tjp_f + grp_lonevxl + grp_tjp_u + grp_norge + grp_pp + borgoDep + aktieFV;
+    const fvF      = extraFV(extraSparF);
+    const fvU      = extraFV(extraSparU);
+    const fvFU     = extraFV(extraSparF + extraSparU);
+
+    // Månader till FIRE-nummer (approx): extra_fv / (total_monthly_savings)
+    const totSparMån = (parseFloat(document.getElementById('input-fonder-pmt').value) || 0)
+                     + (parseFloat(document.getElementById('input-lonevxl-pmt').value) || 0);
+    function månTidigare(extraFv) {
+      if (totSparMån <= 0 || extraFv <= 0) return 0;
+      return Math.round(extraFv / (totSparMån + extraFv / nMån));
+    }
+
+    function lhCard(elId, titel, extraF, extraU, totalExtraSpar, totalFV) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const isBas = totalExtraSpar === 0;
+      const color = isBas ? 'var(--muted)' : 'var(--accent2)';
+      const mån = månTidigare(totalFV);
+      el.innerHTML = `
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${color};margin-bottom:10px;">${titel}</div>
+        <table style="width:100%;font-size:.82rem;border-collapse:collapse;">
+          <tr><td style="color:var(--muted);padding:3px 0;">Extra sparande F</td>
+              <td style="text-align:right;font-weight:600;">${extraF > 0 ? '+' + Math.round(extraF).toLocaleString('sv-SE') + '&nbsp;kr/mån' : '—'}</td></tr>
+          <tr><td style="color:var(--muted);padding:3px 0;">Extra sparande U</td>
+              <td style="text-align:right;font-weight:600;">${extraU > 0 ? '+' + Math.round(extraU).toLocaleString('sv-SE') + '&nbsp;kr/mån' : '—'}</td></tr>
+          <tr><td style="color:var(--muted);padding:3px 0;">Extra FV vid FIRE</td>
+              <td style="text-align:right;font-weight:600;color:${color}">${totalFV > 0 ? '+' + (totalFV/1e6).toFixed(2) + '&nbsp;MSEK' : '—'}</td></tr>
+          <tr><td style="color:var(--muted);padding:3px 0;">Kapital totalt</td>
+              <td style="text-align:right;font-weight:700;color:var(--accent1)">${((basKap + totalFV)/1e6).toFixed(2)}&nbsp;MSEK</td></tr>
+          <tr><td style="color:var(--muted);padding:3px 0;">FIRE ~månader tidigare</td>
+              <td style="text-align:right;font-weight:600;color:${color}">${mån > 0 ? '~' + mån + '&nbsp;mån' : '—'}</td></tr>
+        </table>`;
+    }
+
+    lhCard('lh-bas-card', 'Bas (ingen höjning)',    0,          0,          0,            0);
+    lhCard('lh-f-card',   'Höjning Felipe (' + Math.round(lhF*100) + '%)', extraSparF, 0,          extraSparF,   fvF);
+    lhCard('lh-u-card',   'Höjning Ulrika (' + Math.round(lhU*100) + '%)', 0,          extraSparU, extraSparU,   fvU);
+    lhCard('lh-fu-card',  'Bägge höjs',             extraSparF, extraSparU, extraSparF+extraSparU, fvFU);
+  })();
 }
 
 // ── Event-lyssnare ────────────────────────────────────────────────────────
-['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta'].forEach(id =>
-  document.getElementById(id).addEventListener('input', recalculate)
-);
+['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta',
+ 'slider-lonehoj-f','slider-lonehoj-u','slider-sparandel'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', function() {
+    // Uppdatera display-span om det finns
+    const displayId = id.replace('slider-','val-');
+    const disp = document.getElementById(displayId);
+    if (disp) disp.textContent = this.value;
+    recalculate();
+  });
+});
 document.getElementById('input-exp').addEventListener('input', function() {
   localStorage.setItem('rap_levnadskostnad', this.value);
   recalculate();
