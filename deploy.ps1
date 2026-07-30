@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "1/3  Genererar rapport_interaktiv.html..." -ForegroundColor Cyan
+Write-Host "1/3  Genererar fire-rapport.html..." -ForegroundColor Cyan
 py -3 "D:\arcgis\tjänstepension-pension\fire-rapport\generate_rapport_interaktiv.py"
 
 Write-Host "2/3  Kopierar ekonomi.html och historik.html..." -ForegroundColor Cyan
@@ -12,7 +12,7 @@ Copy-Item "D:\arcgis\minaegnagrejer\fire-rapport\historik.html" "D:\arcgis\verdu
 
 Write-Host "3/3  Pushar till GitHub..." -ForegroundColor Cyan
 Set-Location "D:\arcgis\verdu-ekonomi"
-git add ekonomi.html rapport_interaktiv.html historik.html
+git add ekonomi.html fire-rapport.html historik.html
 $changes = git status --porcelain
 if ($changes) {
     git commit -m "Deploy: update HTML files $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
@@ -23,5 +23,5 @@ if ($changes) {
 }
 
 Write-Host "  https://felipeverdugit.github.io/verdu-ekonomi/ekonomi.html" -ForegroundColor Green
-Write-Host "  https://felipeverdugit.github.io/verdu-ekonomi/rapport_interaktiv.html" -ForegroundColor Green
+Write-Host "  https://felipeverdugit.github.io/verdu-ekonomi/fire-rapport.html" -ForegroundColor Green
 Write-Host "  https://felipeverdugit.github.io/verdu-ekonomi/historik.html" -ForegroundColor Green
