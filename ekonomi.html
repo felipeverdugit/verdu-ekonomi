@@ -252,6 +252,7 @@
       <div class="row"><span class="lbl">Nextory</span><input type="number" data-key="ut_nextory" value="269" step="10"></div>
       <div class="row"><span class="lbl">Anthropic (Claude)</span><input type="number" data-key="ut_claude" value="253" step="10"></div>
       <div class="row"><span class="lbl">Spotify</span><input type="number" data-key="ut_spotify" value="219" step="10"></div>
+      <div class="row"><span class="lbl">Miscellaneous</span><input type="number" data-key="ut_misc_pren" value="0" step="10"></div>
       <div class="row-total"><span class="lbl">Totalt</span><span class="val" id="tot-prenumerationer" style="color:#818cf8;">—</span></div>
     </div>
 
@@ -551,7 +552,7 @@ function recalculate() {
   const spar      = v('spar_lysaf')+ v('spar_lysau')+ v('spar_buffert')+ v('spar_avanzaN')+ v('spar_borgo')+ v('ut_resor');
   localStorage.setItem('ek_spar_total', Math.round(spar));
   const ovriga    = v('ut_mc_f') + v('ut_mc_u');
-  const prenumer  = v('ut_nextory') + v('ut_claude') + v('ut_spotify');
+  const prenumer  = v('ut_nextory') + v('ut_claude') + v('ut_spotify') + v('ut_misc_pren');
 
   const utTot  = boende + transport + telefoni + forsakr + ovrigt + spar + ovriga + prenumer;
   const saldo  = inTot - utTot;
