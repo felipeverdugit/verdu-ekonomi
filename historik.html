@@ -104,6 +104,22 @@
 
 <hr>
 
+<!-- PROGNOS -->
+<section>
+  <h2>Prognos mot FIRE (7 %/år)</h2>
+  <div class="chart-card">
+    <canvas id="prognosChart" height="120"></canvas>
+  </div>
+  <div style="color:var(--muted);font-size:.78rem;margin-top:10px;display:flex;gap:24px;flex-wrap:wrap;">
+    <span>Utgångspunkt: <strong id="prognos-start" style="color:var(--text)">—</strong></span>
+    <span>Sparande/år: <strong id="prognos-spar-ar" style="color:var(--text)">—</strong></span>
+    <span>FIRE-mål: <strong id="prognos-fire-num" style="color:var(--orange)">—</strong></span>
+    <span style="color:var(--purple)">● 2035 &amp; ● 2037 = FIRE-scenarion</span>
+  </div>
+</section>
+
+<hr>
+
 <!-- TABELL -->
 <section>
   <h2>Logg</h2>
@@ -189,6 +205,7 @@ function load() {
 }
 
 let lineChart = null;
+let prognosChart = null;
 
 function render(hist) {
   // ── Tabell ──────────────────────────────────────────────────────────────
@@ -243,6 +260,103 @@ function render(hist) {
   }
 }
 
+function renderPrognos(hist) {
+  const last = hist[hist.length - 1];
+  if (!last) return;
+
+  const V0      = last.totalt;
+  const r       = 0.07;
+  const sparMon = parseFloat(localStorage.getItem('ek_spar_total')) || 0;
+  const sparAr  = sparMon * 12;
+  const fireNum = parseFloat(localStorage.getItem('ek_fire_num')) || 0;
+
+  const startYear = parseInt(last.date.slice(0, 4));
+  const labels = [], noSpar = [], medSpar = [], fireLine = [];
+
+  for (let y = startYear; y <= 2038; y++) {
+    const t = y - startYear;
+    labels.push(y.toString());
+    const vBase = Math.round(V0 * Math.pow(1 + r, t));
+    const vSpar = sparAr > 0
+      ? Math.round(V0 * Math.pow(1+r,t) + sparAr * (Math.pow(1+r,t) - 1) / r)
+      : vBase;
+    noSpar.push(vBase);
+    medSpar.push(vSpar);
+    if (fireNum) fireLine.push(fireNum);
+  }
+
+  const fireYears = ['2035','2037'];
+  const ptRadius = (lbl, base) => fireYears.includes(lbl) ? 9 : base;
+  const ptColor  = (lbl, def)  => fireYears.includes(lbl) ? '#a78bfa' : def;
+
+  document.getElementById('prognos-start').textContent    = fmtM(V0);
+  document.getElementById('prognos-spar-ar').textContent  = sparAr ? Math.round(sparAr).toLocaleString('sv-SE') + ' kr' : '—';
+  document.getElementById('prognos-fire-num').textContent = fireNum ? fmtM(fireNum) : '—';
+
+  const datasets = [
+    {
+      label: 'Med sparande',
+      data: medSpar,
+      borderColor: '#6ee7b7',
+      backgroundColor: '#6ee7b710',
+      tension: .35,
+      fill: false,
+      pointRadius: labels.map(l => ptRadius(l, 3)),
+      pointBackgroundColor: labels.map(l => ptColor(l, '#6ee7b7')),
+      pointBorderColor: labels.map(l => ptColor(l, '#6ee7b7')),
+    },
+    {
+      label: 'Utan extra sparande',
+      data: noSpar,
+      borderColor: '#4f8ef7',
+      backgroundColor: 'transparent',
+      borderDash: [7, 4],
+      tension: .35,
+      fill: false,
+      pointRadius: labels.map(l => ptRadius(l, 2)),
+      pointBackgroundColor: labels.map(l => ptColor(l, '#4f8ef7')),
+      pointBorderColor: labels.map(l => ptColor(l, '#4f8ef7')),
+    },
+  ];
+
+  if (fireNum) {
+    datasets.push({
+      label: 'FIRE-mål',
+      data: fireLine,
+      borderColor: '#f59e0b',
+      backgroundColor: 'transparent',
+      borderDash: [3, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+    });
+  }
+
+  const chartOpts = {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#e2e8f0', boxWidth: 14 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtM(ctx.parsed.y)}` } },
+    },
+    scales: {
+      x: { ticks: { color: '#8892a4' }, grid: { color: '#2d3348' } },
+      y: { ticks: { color: '#8892a4', callback: v => (v/1e6).toFixed(1) + ' M' }, grid: { color: '#2d3348' } },
+    },
+  };
+
+  if (prognosChart) {
+    prognosChart.data.labels   = labels;
+    prognosChart.data.datasets = datasets;
+    prognosChart.update();
+  } else {
+    prognosChart = new Chart(document.getElementById('prognosChart'), {
+      type: 'line',
+      data: { labels, datasets },
+      options: chartOpts,
+    });
+  }
+}
+
 // Seed historiska snapshots om de saknas
 (function() {
   const existing = load();
@@ -263,7 +377,9 @@ function render(hist) {
   }
 })();
 
-render(load());
+const _hist = load();
+render(_hist);
+renderPrognos(_hist);
 
 // ── Google Sheets Sync (read-only) ───────────────────────────────────────────
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbxtwNDdYA5r412iinnItbLoPO87AQZ3D8Fmjg7oHsQE76C9-1tilYORjbbgR4OtnY2Pjw/exec';
