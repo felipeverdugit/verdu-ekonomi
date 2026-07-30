@@ -413,10 +413,27 @@ function init() {
     document.getElementById('lbl-monthly').textContent = fmt(monthly);
   }
 
-  // Listen for changes
-  ['inp-kapital','inp-avkastning','inp-startar','slider-uttag',
-   'p1-ar','p1-bel','p2-ar','p2-bel','p3-ar','p3-bel','p4-ar','p4-bel','p5-ar','p5-bel']
-    .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+  // Load saved pension values
+  [1,2,3,4,5].forEach(i => {
+    const arSaved  = localStorage.getItem('utk_p' + i + '_ar');
+    const belSaved = localStorage.getItem('utk_p' + i + '_bel');
+    if (arSaved)  document.getElementById('p' + i + '-ar').value  = arSaved;
+    if (belSaved) document.getElementById('p' + i + '-bel').value = belSaved;
+  });
+
+  // Listen for changes — pension fields also persist to localStorage
+  ['inp-kapital','inp-avkastning','inp-startar','slider-uttag'].forEach(id =>
+    document.getElementById(id).addEventListener('input', recalc));
+
+  [1,2,3,4,5].forEach(i => {
+    ['ar','bel'].forEach(field => {
+      const el = document.getElementById('p' + i + '-' + field);
+      el.addEventListener('input', () => {
+        localStorage.setItem('utk_p' + i + '_' + field, el.value);
+        recalc();
+      });
+    });
+  });
 
   recalc();
 }
