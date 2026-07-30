@@ -427,10 +427,6 @@ function recalc() {
 }
 
 function init() {
-  // Pre-fill from localStorage
-  const netto = parseFloat(localStorage.getItem('ek_netto')) || 0;
-  if (netto) document.getElementById('inp-kapital').value = Math.round(netto);
-
   const monthly = ['ut_lan1','ut_lan_lag','ut_vatten','ut_tibber','ut_energi','ut_avfall',
                    'ut_kia','ut_eup','ut_telia','ut_telenor','ut_tre','ut_bredband5g','ut_telia_cloud',
                    'ut_hem','ut_trygg','ut_skandia','ut_if','ut_svl',
@@ -460,12 +456,16 @@ function init() {
     });
     const uttavk = localStorage.getItem('rap_uttavk');
     if (uttavk) document.getElementById('inp-avkastning').value = parseFloat(uttavk).toFixed(1);
+    const kapital = localStorage.getItem('rap_kapital');
+    if (kapital) document.getElementById('inp-kapital').value = kapital;
+    const fireYear = localStorage.getItem('rap_fireYear');
+    if (fireYear) document.getElementById('inp-startar').value = fireYear;
   }
   loadPensions();
 
   // Auto-uppdatera om FIRE-rapporten ändras i annan flik eller vid bfcache-återladdning
   window.addEventListener('storage', e => {
-    if (e.key && (e.key.startsWith('rap_utk_') || e.key === 'rap_uttavk')) { loadPensions(); recalc(); }
+    if (e.key && (e.key.startsWith('rap_utk_') || e.key === 'rap_uttavk' || e.key === 'rap_kapital' || e.key === 'rap_fireYear')) { loadPensions(); recalc(); }
   });
   window.addEventListener('pageshow', e => {
     if (e.persisted) { loadPensions(); recalc(); }

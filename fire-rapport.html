@@ -1119,7 +1119,7 @@ function recalculate() {
   const f_norsk_tjp_slut_yr = FELIPE_FODELSEAR + 77;   // 2052
   const u_norsk_tjp_slut_yr = ULRIKA_FODELSEAR + 77;   // 2047
 
-  // Svensk TjP — startår styrs av sliders, minst 62 år och minst vid FIRE
+  // Svensk TjP — startår styrs av sliders (ingen klampning mot fireYear)
   // Felipe
   const f_tjp_start_yr = FELIPE_FODELSEAR + fTjpAlder;
   const f_tjp_extra_ar = Math.max(0, f_tjp_start_yr - fireYear);
@@ -1150,7 +1150,9 @@ function recalculate() {
   const YR_F_ALLMAN_SE = FELIPE_FODELSEAR + fAllmanAlder;
 
   // ── Exportera till uttags-kalkylator ──
-  localStorage.setItem('rap_uttavk', uttAvkAr);
+  localStorage.setItem('rap_uttavk',   uttAvkAr);
+  localStorage.setItem('rap_fireYear', fireYear);
+  localStorage.setItem('rap_kapital',  Math.round(fireKapital));
   // Pensionsflöden (7 rader, kronologisk ordning)
   // P1: Norsk TjP Ulrika (OTP, 62→77 år — tidsbegränsad)
   localStorage.setItem('rap_utk_p1_ar',  YR_U_NORSK_TJP);
@@ -1184,7 +1186,7 @@ function recalculate() {
   // Alla möjliga pensionshändelser med sina startår
   // Hjälpfunktion — visar faktisk ålder vid uttag (aldrig lägre än planerad ålder)
   function actualAge(plannedYr, birthYr) {
-    return Math.max(plannedYr, fireYear) - birthYr;
+    return plannedYr - birthYr;
   }
 
   const alleHändelser = [
