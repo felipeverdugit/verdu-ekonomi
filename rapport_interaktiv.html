@@ -218,6 +218,11 @@
         <input type="range" id="slider-f-norsk-tjp-alder" min="62" max="70" step="1" value="62">
       </div>
       <div class="ctrl-group">
+        <label>Ulrika: TjP Norge startålder</label>
+        <span class="ctrl-val"><span id="val-u-norsk-tjp-alder">62</span> år</span>
+        <input type="range" id="slider-u-norsk-tjp-alder" min="62" max="70" step="1" value="62">
+      </div>
+      <div class="ctrl-group">
         <label>Ulrika: TjP startålder</label>
         <span class="ctrl-val"><span id="val-u-tjp-alder">65</span> år</span>
         <input type="range" id="slider-u-tjp-alder" min="62" max="70" step="1" value="65">
@@ -1086,14 +1091,16 @@ function recalculate() {
   const tjpAr            = parseInt(document.getElementById('slider-tjp-ar').value) || 20;
   const fTjpAlder        = parseInt(document.getElementById('slider-f-tjp-alder').value) || 65;
   const fNorskTjpAlder   = parseInt(document.getElementById('slider-f-norsk-tjp-alder').value) || 62;
+  const uNorskTjpAlder   = parseInt(document.getElementById('slider-u-norsk-tjp-alder').value) || 62;
   const uTjpAlder        = parseInt(document.getElementById('slider-u-tjp-alder').value) || 62;
   const YR_F_NORSK_TJP  = Math.max(fireYear, FELIPE_FODELSEAR + fNorskTjpAlder);
-  const YR_U_NORSK_TJP  = ULRIKA_FODELSEAR + 62;   // fast (62 år)
+  const YR_U_NORSK_TJP  = Math.max(fireYear, ULRIKA_FODELSEAR + uNorskTjpAlder);
   const fAllmanAlder     = parseInt(document.getElementById('slider-f-allman-alder').value) || 67;
   const uAllmanAlder     = parseInt(document.getElementById('slider-u-allman-alder').value) || 68;
   document.getElementById('val-tjp-ar').textContent              = tjpAr;
   document.getElementById('val-f-tjp-alder').textContent         = fTjpAlder;
   document.getElementById('val-f-norsk-tjp-alder').textContent   = fNorskTjpAlder;
+  document.getElementById('val-u-norsk-tjp-alder').textContent   = uNorskTjpAlder;
   document.getElementById('val-u-tjp-alder').textContent         = uTjpAlder;
   document.getElementById('val-f-allman-alder').textContent = fAllmanAlder;
   document.getElementById('val-u-allman-alder').textContent = uAllmanAlder;
@@ -1179,7 +1186,7 @@ function recalculate() {
   }
 
   const alleHändelser = [
-    { yr: YR_U_NORSK_TJP,       who:'u', typ:'norsk_tjp',        label:`Ulrika 62: Norsk TjP startar (t.o.m. 77)` },
+    { yr: YR_U_NORSK_TJP,       who:'u', typ:'norsk_tjp',        label:`Ulrika ${uNorskTjpAlder}: Norsk TjP startar (t.o.m. 77)` },
     { yr: u_norsk_tjp_slut_yr,  who:'u', typ:'norsk_tjp_slut',   label:`Ulrika 77: Norsk TjP slutar` },
     { yr: u_tjp_start_yr,       who:'u', typ:'svensk_tjp',       label:`Ulrika ${actualAge(u_tjp_start_yr, ULRIKA_FODELSEAR)}: Svensk TjP Kommun startar (${tjpAr} år)` },
     { yr: u_tjp_slut_yr,        who:'u', typ:'svensk_tjp_slut',  label:`Ulrika ${u_tjp_slut_yr - ULRIKA_FODELSEAR}: Svensk TjP Kommun slutar` },
@@ -1665,7 +1672,7 @@ function recalculate() {
 }
 
 // ── Event-lyssnare ────────────────────────────────────────────────────────
-const PERSISTED_SLIDERS = ['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta',
+const PERSISTED_SLIDERS = ['slider-avk','slider-ar','slider-uttavk','slider-tjp-ar','slider-f-tjp-alder','slider-f-norsk-tjp-alder','slider-u-norsk-tjp-alder','slider-u-tjp-alder','slider-f-allman-alder','slider-u-allman-alder','slider-skatt','slider-borgo-ranta',
  'slider-lonehoj-f','slider-lonehoj-u','slider-sparandel'];
 PERSISTED_SLIDERS.forEach(id => {
   const el = document.getElementById(id);
