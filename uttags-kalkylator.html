@@ -151,37 +151,49 @@
     <div class="card">
       <h2>Pensionsinkomster</h2>
       <table class="pension-table">
-        <thead><tr><th>Källa</th><th>Från år</th><th>kr/mån (netto)</th></tr></thead>
+        <thead><tr><th>Källa</th><th>Från år</th><th>T.o.m. år</th><th>kr/mån (netto)</th></tr></thead>
         <tbody>
           <tr>
             <td class="lbl-cell">Norsk TjP — Ulrika</td>
-            <td><input type="number" id="p1-ar" value="2032" min="2025" max="2060"></td>
+            <td><input type="number" id="p1-ar"  value="2032" min="2025" max="2060"></td>
+            <td><input type="number" id="p1-tom" placeholder="—" min="2025" max="2100"></td>
             <td><input type="number" id="p1-bel" value="0" step="500"></td>
           </tr>
           <tr>
             <td class="lbl-cell">Svensk TjP — Ulrika</td>
-            <td><input type="number" id="p2-ar" value="2037" min="2025" max="2060"></td>
+            <td><input type="number" id="p2-ar"  value="2037" min="2025" max="2060"></td>
+            <td><input type="number" id="p2-tom" placeholder="—" min="2025" max="2100"></td>
             <td><input type="number" id="p2-bel" value="0" step="500"></td>
           </tr>
           <tr>
             <td class="lbl-cell">Norsk TjP — Felipe</td>
-            <td><input type="number" id="p3-ar" value="2037" min="2025" max="2060"></td>
+            <td><input type="number" id="p3-ar"  value="2037" min="2025" max="2060"></td>
+            <td><input type="number" id="p3-tom" placeholder="—" min="2025" max="2100"></td>
             <td><input type="number" id="p3-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">Allmänpension Ulrika (SE + NAV)</td>
-            <td><input type="number" id="p4-ar" value="2038" min="2025" max="2070"></td>
+            <td class="lbl-cell" style="color:var(--green)">Allmänpension Ulrika (SE+NAV)</td>
+            <td><input type="number" id="p4-ar"  value="2038" min="2025" max="2070"></td>
+            <td><input type="number" id="p4-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
             <td><input type="number" id="p4-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">Svensk TjP — Felipe + Fast TjP</td>
-            <td><input type="number" id="p5-ar" value="2040" min="2025" max="2070"></td>
+            <td class="lbl-cell">Svensk TjP — Felipe</td>
+            <td><input type="number" id="p5-ar"  value="2040" min="2025" max="2070"></td>
+            <td><input type="number" id="p5-tom" placeholder="—" min="2025" max="2100"></td>
             <td><input type="number" id="p5-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">Allmänpension Felipe (SE + NAV)</td>
-            <td><input type="number" id="p6-ar" value="2043" min="2025" max="2070"></td>
+            <td class="lbl-cell" style="color:var(--green)">Fast TjP Felipe (Alecta/KPA)</td>
+            <td><input type="number" id="p6-ar"  value="2040" min="2025" max="2070"></td>
+            <td><input type="number" id="p6-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
             <td><input type="number" id="p6-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell" style="color:var(--green)">Allmänpension Felipe (SE+NAV)</td>
+            <td><input type="number" id="p7-ar"  value="2043" min="2025" max="2070"></td>
+            <td><input type="number" id="p7-tom" placeholder="livsvarig" min="2025" max="2100" style="color:var(--muted)" disabled></td>
+            <td><input type="number" id="p7-bel" value="0" step="500"></td>
           </tr>
         </tbody>
       </table>
@@ -256,8 +268,9 @@ function fmtM(n) { return (n / 1e6).toFixed(2) + ' MSEK'; }
 function ek(k)   { return parseFloat(localStorage.getItem('ek_' + k)) || 0; }
 
 function getPensions() {
-  return [1,2,3,4,5,6].map(i => ({
-    ar:  parseInt(document.getElementById('p' + i + '-ar').value)  || 9999,
+  return [1,2,3,4,5,6,7].map(i => ({
+    ar:  parseInt(document.getElementById('p' + i + '-ar').value)   || 9999,
+    tom: parseInt(document.getElementById('p' + i + '-tom').value)  || 9999,
     bel: parseFloat(document.getElementById('p' + i + '-bel').value) || 0,
   }));
 }
@@ -282,7 +295,7 @@ function recalc() {
   const FIRE_YEARS = [2035, 2037];
 
   for (let yr = startAr; yr <= endAr; yr++) {
-    const pensionMon = pensions.filter(p => p.ar <= yr).reduce((s, p) => s + p.bel, 0);
+    const pensionMon = pensions.filter(p => p.ar <= yr && yr <= p.tom).reduce((s, p) => s + p.bel, 0);
     const nettoUttag = Math.max(0, uttag - pensionMon);
     const avkastning = cap * avkPct;
     const forandring = avkastning - nettoUttag * 12;
@@ -420,27 +433,39 @@ function init() {
 
   // Ladda pensionsbelopp alltid från FIRE-rapport (rap_utk_*) — FIRE-rapport är källan
   function loadPensions() {
-    [1,2,3,4,5,6].forEach(i => {
+    [1,2,3,4,5,6,7].forEach(i => {
       const ar  = localStorage.getItem('rap_utk_p' + i + '_ar');
+      const tom = localStorage.getItem('rap_utk_p' + i + '_tom');
       const bel = localStorage.getItem('rap_utk_p' + i + '_bel');
-      if (ar)  document.getElementById('p' + i + '-ar').value  = ar;
-      if (bel) document.getElementById('p' + i + '-bel').value = bel;
+      const el_ar  = document.getElementById('p' + i + '-ar');
+      const el_tom = document.getElementById('p' + i + '-tom');
+      const el_bel = document.getElementById('p' + i + '-bel');
+      if (ar  && el_ar)  el_ar.value  = ar;
+      if (tom && el_tom && !el_tom.disabled) {
+        const v = parseInt(tom);
+        el_tom.value = (v && v < 9999) ? v : '';
+      }
+      if (bel && el_bel) el_bel.value = bel;
     });
   }
   loadPensions();
 
-  // Auto-uppdatera om FIRE-rapporten ändras i en annan flik
+  // Auto-uppdatera om FIRE-rapporten ändras i annan flik eller vid bfcache-återladdning
   window.addEventListener('storage', e => {
     if (e.key && e.key.startsWith('rap_utk_')) { loadPensions(); recalc(); }
+  });
+  window.addEventListener('pageshow', e => {
+    if (e.persisted) { loadPensions(); recalc(); }
   });
 
   // Lyssna på ändringar
   ['inp-kapital','inp-avkastning','inp-startar','slider-uttag'].forEach(id =>
     document.getElementById(id).addEventListener('input', recalc));
 
-  [1,2,3,4,5,6].forEach(i => {
-    ['ar','bel'].forEach(field => {
-      document.getElementById('p' + i + '-' + field).addEventListener('input', recalc);
+  [1,2,3,4,5,6,7].forEach(i => {
+    ['ar','tom','bel'].forEach(field => {
+      const el = document.getElementById('p' + i + '-' + field);
+      if (el && !el.disabled) el.addEventListener('input', recalc);
     });
   });
 
