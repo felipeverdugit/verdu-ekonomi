@@ -699,6 +699,7 @@ function recalculate() {
   const firePct  = fireNum > 0 ? netto / fireNum * 100 : 0;
   localStorage.setItem('ek_netto',    Math.round(netto));
   localStorage.setItem('ek_fire_pct', firePct.toFixed(1));
+  localStorage.setItem('ek_fire_num', Math.round(fireNum));
   localStorage.setItem('ek_glr_dag',  glrDag);
 
   // Fas på ekonomiska resan

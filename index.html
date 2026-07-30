@@ -27,6 +27,24 @@
   .kpi-box .lbl { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
   .kpi-box .val { font-size:1.25rem; font-weight:800; }
 
+  /* FIRE-termometer */
+  .fire-thermo { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
+  .fire-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+  .fire-top-left .lbl { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+  .fire-top-left .fas-badge { display:inline-block; margin-top:6px; padding:3px 12px; border-radius:20px; font-size:.78rem; font-weight:700; background:var(--card2); }
+  .fire-pct-big { font-size:2.4rem; font-weight:800; line-height:1; }
+
+  .bar-wrap { position:relative; margin-bottom:6px; }
+  .bar-bg { background:var(--card2); border-radius:999px; height:20px; overflow:hidden; position:relative; }
+  .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#4f8ef7 0%,#6ee7b7 100%); transition:width 1.2s cubic-bezier(.4,0,.2,1); width:0%; }
+  .bar-ticks { position:absolute; inset:0; pointer-events:none; }
+  .bar-tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.15); }
+  .bar-labels { display:flex; justify-content:space-between; font-size:.68rem; color:var(--muted); margin-top:4px; padding:0 2px; }
+
+  .fire-detail { display:flex; gap:24px; flex-wrap:wrap; margin-top:16px; font-size:.82rem; }
+  .fire-detail span { color:var(--muted); }
+  .fire-detail strong { color:var(--text); }
+
   /* Nav cards */
   .nav-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   @media(max-width:600px) { .nav-grid { grid-template-columns:1fr; } }
@@ -96,6 +114,35 @@
   </div>
 </div>
 
+<!-- FIRE-termometer -->
+<div class="fire-thermo">
+  <div class="fire-top">
+    <div class="fire-top-left">
+      <div class="lbl">FIRE-termometer</div>
+      <div class="fas-badge" id="fire-fas">—</div>
+    </div>
+    <div class="fire-pct-big" id="fire-pct-big">—</div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-bg">
+      <div class="bar-fill" id="fire-bar-fill"></div>
+      <div class="bar-ticks">
+        <div class="bar-tick" style="left:25%"></div>
+        <div class="bar-tick" style="left:50%"></div>
+        <div class="bar-tick" style="left:75%"></div>
+      </div>
+    </div>
+    <div class="bar-labels">
+      <span>0</span><span>25%</span><span>50%</span><span>75%</span><span>FIRE</span>
+    </div>
+  </div>
+  <div class="fire-detail">
+    <span>Netto: <strong id="fire-d-netto">—</strong></span>
+    <span>Mål: <strong id="fire-d-num">—</strong></span>
+    <span>Kvar: <strong id="fire-d-kvar">—</strong></span>
+  </div>
+</div>
+
 <!-- Nav cards -->
 <div class="nav-grid">
   <a class="nav-card" href="ekonomi.html">
@@ -139,6 +186,27 @@ function loadKpis() {
   // FIRE-progress
   const firePct = parseFloat(localStorage.getItem('ek_fire_pct')) || 0;
   document.getElementById('kpi-fire').textContent = firePct ? Math.round(firePct) + '%' : '—';
+
+  // FIRE-termometer
+  const fireNum = parseFloat(localStorage.getItem('ek_fire_num')) || 0;
+  const kvar    = Math.max(0, fireNum - netto);
+  const pctCap  = Math.min(firePct, 100);
+  const fireColor = firePct < 35 ? 'var(--red)' : firePct < 65 ? 'var(--orange)' : firePct < 100 ? 'var(--blue)' : 'var(--green)';
+  const fasTxt    = firePct < 10  ? 'Överleva'
+                  : firePct < 35  ? 'Stabilisera'
+                  : firePct < 65  ? 'Accelerera'
+                  : firePct < 100 ? 'Förvalta'
+                  : '🎯 FIRE uppnått!';
+  document.getElementById('fire-pct-big').textContent = firePct ? Math.round(firePct) + '%' : '—';
+  document.getElementById('fire-pct-big').style.color = fireColor;
+  document.getElementById('fire-fas').textContent     = fasTxt;
+  document.getElementById('fire-fas').style.color     = fireColor;
+  document.getElementById('fire-d-netto').textContent = netto   ? fmtM(netto)   : '—';
+  document.getElementById('fire-d-num').textContent   = fireNum ? fmtM(fireNum) : '—';
+  document.getElementById('fire-d-kvar').textContent  = fireNum ? fmtM(kvar)    : '—';
+  setTimeout(() => {
+    document.getElementById('fire-bar-fill').style.width = pctCap + '%';
+  }, 100);
 
   // Utgifter/mån (utan sparande)
   const boende   = ek('ut_lan1') + ek('ut_lan_lag') + ek('ut_vatten') + ek('ut_tibber') + ek('ut_energi') + ek('ut_avfall');
