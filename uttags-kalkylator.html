@@ -154,29 +154,34 @@
         <thead><tr><th>Källa</th><th>Från år</th><th>kr/mån (netto)</th></tr></thead>
         <tbody>
           <tr>
-            <td class="lbl-cell">TjP Ulrika</td>
-            <td><input type="number" id="p1-ar" value="2035" min="2025" max="2060"></td>
+            <td class="lbl-cell">Norsk TjP — Ulrika</td>
+            <td><input type="number" id="p1-ar" value="2032" min="2025" max="2060"></td>
             <td><input type="number" id="p1-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">TjP Felipe</td>
+            <td class="lbl-cell">Svensk TjP — Ulrika</td>
             <td><input type="number" id="p2-ar" value="2037" min="2025" max="2060"></td>
             <td><input type="number" id="p2-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">Allmänpension (SE)</td>
-            <td><input type="number" id="p3-ar" value="2038" min="2025" max="2070"></td>
+            <td class="lbl-cell">Norsk TjP — Felipe</td>
+            <td><input type="number" id="p3-ar" value="2037" min="2025" max="2060"></td>
             <td><input type="number" id="p3-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell">NAV + norsk pension</td>
+            <td class="lbl-cell">Allmänpension Ulrika (SE + NAV)</td>
             <td><input type="number" id="p4-ar" value="2038" min="2025" max="2070"></td>
             <td><input type="number" id="p4-bel" value="0" step="500"></td>
           </tr>
           <tr>
-            <td class="lbl-cell" style="color:var(--text)">Övrigt</td>
+            <td class="lbl-cell">Svensk TjP — Felipe + Fast TjP</td>
             <td><input type="number" id="p5-ar" value="2040" min="2025" max="2070"></td>
             <td><input type="number" id="p5-bel" value="0" step="500"></td>
+          </tr>
+          <tr>
+            <td class="lbl-cell">Allmänpension Felipe (SE + NAV)</td>
+            <td><input type="number" id="p6-ar" value="2043" min="2025" max="2070"></td>
+            <td><input type="number" id="p6-bel" value="0" step="500"></td>
           </tr>
         </tbody>
       </table>
@@ -251,7 +256,7 @@ function fmtM(n) { return (n / 1e6).toFixed(2) + ' MSEK'; }
 function ek(k)   { return parseFloat(localStorage.getItem('ek_' + k)) || 0; }
 
 function getPensions() {
-  return [1,2,3,4,5].map(i => ({
+  return [1,2,3,4,5,6].map(i => ({
     ar:  parseInt(document.getElementById('p' + i + '-ar').value)  || 9999,
     bel: parseFloat(document.getElementById('p' + i + '-bel').value) || 0,
   }));
@@ -414,7 +419,7 @@ function init() {
   }
 
   // Ladda pensionsbelopp — FIRE-rapport (rap_utk_*) prioriteras, annars manuellt sparade (utk_p*)
-  [1,2,3,4,5].forEach(i => {
+  [1,2,3,4,5,6].forEach(i => {
     const arRap  = localStorage.getItem('rap_utk_p' + i + '_ar');
     const belRap = localStorage.getItem('rap_utk_p' + i + '_bel');
     const arMan  = localStorage.getItem('utk_p' + i + '_ar');
@@ -429,7 +434,7 @@ function init() {
   ['inp-kapital','inp-avkastning','inp-startar','slider-uttag'].forEach(id =>
     document.getElementById(id).addEventListener('input', recalc));
 
-  [1,2,3,4,5].forEach(i => {
+  [1,2,3,4,5,6].forEach(i => {
     ['ar','bel'].forEach(field => {
       const el = document.getElementById('p' + i + '-' + field);
       el.addEventListener('input', () => {
