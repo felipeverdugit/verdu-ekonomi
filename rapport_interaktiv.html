@@ -1121,13 +1121,13 @@ function recalculate() {
 
   // Svensk TjP — startår styrs av sliders, minst 62 år och minst vid FIRE
   // Felipe
-  const f_tjp_start_yr = Math.max(fireYear, FELIPE_FODELSEAR + fTjpAlder);
+  const f_tjp_start_yr = FELIPE_FODELSEAR + fTjpAlder;
   const f_tjp_extra_ar = Math.max(0, f_tjp_start_yr - fireYear);
   const f_tjp_vid_uttag = grp_tjp_f * Math.pow(1 + avkAr/100, f_tjp_extra_ar);
   const f_svensk_tjp = Math.round(pmt(uttAvkManad, tjpAr * 12, f_tjp_vid_uttag));
 
   // Ulrika
-  const u_tjp_start_yr = Math.max(fireYear, ULRIKA_FODELSEAR + uTjpAlder);
+  const u_tjp_start_yr = ULRIKA_FODELSEAR + uTjpAlder;
   const u_tjp_extra_ar = Math.max(0, u_tjp_start_yr - fireYear);
   const u_tjp_vid_uttag = grp_tjp_u * Math.pow(1 + avkAr/100, u_tjp_extra_ar);
   const u_svensk_tjp = Math.round(pmt(uttAvkManad, tjpAr * 12, u_tjp_vid_uttag));
